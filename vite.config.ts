@@ -54,7 +54,19 @@
       outDir: 'build',
     },
     server: {
-      port: 3000,
-      open: true,
+     
+   port: 3000, // your Vite port (default)
+    // If your backend is on localhost:5000
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,      // changes the origin of the host header to the target URL
+        secure: false,           // if your backend uses self-signed https, set false
+        ws: true,                // enable websocket proxying (if needed)
+        // Optional: rewrite if backend doesn't have /api prefix
+        // rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
+
     },
   });

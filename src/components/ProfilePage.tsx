@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect } from 'react';
+
 import { motion } from 'motion/react';
 import { User, Calendar, Clock, Star, Edit, Settings, Gift, History, Phone, Mail, MapPin } from 'lucide-react';
 import { Button } from './ui/button';
@@ -12,39 +13,182 @@ interface ProfilePageProps {
   setCurrentPage: (page: string) => void;
 }
 
-export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [userInfo, setUserInfo] = useState({
-    firstName: 'Sarah',
-    lastName: 'Johnson',
-    email: 'sarah.johnson@email.com',
-    phone: '(555) 123-4567',
-    birthday: '1992-06-15',
-    address: '123 Main St, City, State 12345'
-  });
 
-  const upcomingAppointments = [
-    {
-      id: 1,
-      service: 'Balayage Highlights',
-      stylist: 'Emma Rodriguez',
-      date: '2024-01-15',
-      time: '2:00 PM',
-      duration: 150,
-      price: 180,
-      status: 'confirmed'
-    },
-    {
-      id: 2,
-      service: 'Signature Facial',
-      stylist: 'Maria Santos',
-      date: '2024-01-22',
-      time: '11:00 AM',
-      duration: 90,
-      price: 120,
-      status: 'confirmed'
+type UserInfo = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  birthday?: string;  // ISO string like '1992-06-15'
+  address?: string;
+};
+
+
+type Appointment = {
+  id: string | number;
+  service: string;
+  stylist: string;
+  date: string;   // 'YYYY-MM-DD'
+  time: string;   // e.g., '2:00 PM'
+  duration: number;
+  price: number;
+  status: 'confirmed' | 'pending' | 'cancelled';
+};
+
+
+export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
+ 
+ const [userInfo, setUserInfo] = useState<UserInfo>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    birthday: '',
+    address: '',
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setError('Not authenticated');
+          setLoading(false);
+          return;
+        }
+
+        const res = await fetch('/api/profile', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to load profile');
+
+        // Map backend fields (firstname, lastname, email, phone, birthdate, address)
+        const u = data.user;
+        setUserInfo({
+          firstName: u.firstname || '',
+          lastName: u.lastname || '',
+          email: u.email || '',
+          phone: u.phone || '',
+          birthday: u.birthdate ? new Date(u.birthdate).toISOString().slice(0, 10) : '',
+          address: u.address || '',
+        });
+      } catch (e: any) {
+        setError(e.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const handleSaveProfile = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Not authenticated');
+        return;
+      }
+
+      const payload = {
+        firstname: userInfo.firstName,
+        lastname: userInfo.lastName,
+        phone: userInfo.phone,
+        birthdate: userInfo.birthday, // 'YYYY-MM-DD' -> backend converts to Date
+        address: userInfo.address,
+      };
+
+      const res = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update profile');
+
+      // Reflect updated data back into state
+      const u = data.user;
+      setUserInfo({
+        firstName: u.firstname || '',
+        lastName: u.lastname || '',
+        email: u.email || '',
+        phone: u.phone || '',
+        birthday: u.birthdate ? new Date(u.birthdate).toISOString().slice(0, 10) : '',
+        address: u.address || '',
+      });
+
+      setIsEditing(false);
+      alert('Profile updated');
+    } catch (err: any) {
+      alert(err.message);
     }
-  ];
+  };
+
+  
+
+  const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([
+    // (Optional) initial static entries while loading, can be empty
+    // Your original static entries can stay here as fallback if you prefer.
+  ]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return; // not authenticated; keep static/fallback
+
+    (async () => {
+      try {
+        const res = await fetch('/api/profile/upcoming', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const contentType = res.headers.get('content-type') || '';
+        let data: any;
+        if (contentType.includes('application/json')) {
+          data = await res.json();
+        } else {
+          const text = await res.text();
+          try { data = JSON.parse(text); } catch { data = { error: text }; }
+        }
+
+        if (!res.ok) throw new Error(data?.error || `Failed (${res.status})`);
+
+        // Map backend Booking docs to your UI shape
+        const mapped: Appointment[] = (data.bookings || []).map((b: any) => ({
+          id: b._id,
+          service:
+            (Array.isArray(b.serviceIds) && b.serviceIds[0]?.name) || // if populated
+            b.serviceName ||                                          // if you store a name field
+            'Service',
+          stylist:
+            (Array.isArray(b.stylistIds) && b.stylistIds[0]?.name) ||
+            b.stylistName ||
+            'Stylist',
+          date: b.date ? new Date(b.date).toISOString().slice(0, 10) : '',
+          time: b.timeSlot || '',
+          duration: b.duration ?? 0,
+          price: b.totalPrice ?? 0,
+          status: b.status,
+        }));
+
+        setUpcomingAppointments(mapped);
+      } catch (err) {
+        console.error('Fetch upcoming bookings error:', err);
+        // Optional: keep static/fallback data if fetch fails
+      }
+    })();
+  }, []);
+
 
   const appointmentHistory = [
     {
@@ -54,7 +198,7 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
       date: '2023-12-20',
       time: '3:30 PM',
       price: 85,
-      rating: 5
+      rating: 5,
     },
     {
       id: 4,
@@ -63,7 +207,7 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
       date: '2023-11-28',
       time: '1:00 PM',
       price: 110,
-      rating: 5
+      rating: 5,
     },
     {
       id: 5,
@@ -72,18 +216,13 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
       date: '2023-10-15',
       time: '10:00 AM',
       price: 150,
-      rating: 4
-    }
+      rating: 4,
+    },
   ];
 
   const loyaltyPoints = 850;
   const nextRewardAt = 1000;
   const totalSpent = 645;
-
-  const handleSaveProfile = () => {
-    setIsEditing(false);
-    // Handle save logic here
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-secondary/30 to-accent/20">

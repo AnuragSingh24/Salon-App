@@ -25,21 +25,49 @@ export function AuthPage({ setCurrentPage, setIsAuthenticated, setUserRole }: Au
     confirmPassword: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle authentication logic here
-    
-    // Check for admin login (demo purposes)
-    if (formData.email.toLowerCase() === 'admin@mksalon.com' && formData.password === 'admin123') {
-      setIsAuthenticated(true);
-      setUserRole('admin');
-      setCurrentPage('admin');
-    } else {
-      setIsAuthenticated(true);
-      setUserRole('customer');
-      setCurrentPage('profile');
-    }
-  };
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
+
+  const payload = isLogin
+    ? { email: formData.email, password: formData.password }
+    : {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword
+      };
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) throw new Error(data.message || 'Authentication failed');
+
+    // ✅ Save JWT token in localStorage for future requests
+    localStorage.setItem('token', data.token);
+sessionStorage.setItem('isLoggedIn', JSON.stringify(true));
+
+    // ✅ Update app state
+    setIsAuthenticated(true);
+    setUserRole(data.role || 'customer');
+    setCurrentPage(data.role === 'admin' ? 'admin' : 'profile');
+  } catch (error: any) {
+    console.error('Auth error:', error);
+    alert(error.message);
+  }
+};
+
+
 
   const handleGoogleAuth = () => {
     // Handle Google authentication

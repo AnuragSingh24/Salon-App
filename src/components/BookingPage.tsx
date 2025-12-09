@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect} from 'react';
 import { motion } from 'motion/react';
 import { Calendar, Clock, User, Check, ArrowLeft, ArrowRight, Star } from 'lucide-react';
 import { Button } from './ui/button';
@@ -11,6 +11,56 @@ import { Badge } from './ui/badge';
 interface BookingPageProps {
   setCurrentPage: (page: string) => void;
 }
+
+type Stylist = {
+  id: string;
+  name: string;
+  specialty: string;
+  rating: number;
+  image: string;
+};
+type AvailabilityResponse = {
+  available: boolean;
+  reason?: string;
+  stylist?: {
+    _id: string;
+    name: string;
+    specialty?: string;
+    rating?: number;
+    // ...any other fields you return from Stylist
+  };
+};
+
+
+
+
+function getToken() {
+  try {
+    return localStorage.getItem('token');
+  } catch {
+    return null;
+  }
+}
+
+async function fetchStylists(): Promise<Stylist[]> {
+  const token = getToken();
+  if (!token) throw new Error('Not authenticated. Please login.');
+
+  const res = await fetch('/api/stylist', {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed: ${res.status} ${text}`);
+  }
+  return res.json();
+}
+
+
 
 export function BookingPage({ setCurrentPage }: BookingPageProps) {
   const [step, setStep] = useState(1);
@@ -25,6 +75,11 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
     phone: ''
   });
 
+const [stylists, setStylists] = useState<Stylist[]>([]);
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState<string | null>(null);
+
+
   const services = [
     { id: 'haircut', name: 'Precision Haircut', price: 85, duration: 60 },
     { id: 'color', name: 'Color Transformation', price: 150, duration: 120 },
@@ -34,13 +89,24 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
     { id: 'manicure', name: 'Luxury Manicure', price: 65, duration: 45 },
   ];
 
-  const stylists = [
-    { id: 'emma', name: 'Emma Rodriguez', specialty: 'Hair Styling', rating: 4.9, image: '/api/placeholder/100/100' },
-    { id: 'sarah', name: 'Sarah Chen', specialty: 'Color Specialist', rating: 4.8, image: '/api/placeholder/100/100' },
-    { id: 'maria', name: 'Maria Santos', specialty: 'Spa & Wellness', rating: 5.0, image: '/api/placeholder/100/100' },
-    { id: 'alex', name: 'Alex Thompson', specialty: 'Makeup Artist', rating: 4.9, image: '/api/placeholder/100/100' },
-  ];
+  
+  useEffect(() => {
+  (async () => {
+    setLoading(true); setError(null);
+    try {
+      // Optionally seed if first load—uncomment if desired:
+      // await seedStylists();
+      const data = await fetchStylists();
+      setStylists(data);
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong.');
+    } finally {
+      setLoading(false);
+    }
+  })();
+}, []);
 
+ 
   const timeSlots = [
     '9:00 AM', '9:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
     '12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM', '2:00 PM', '2:30 PM',
@@ -74,62 +140,62 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
 
   const renderStepContent = () => {
     switch (step) {
+      // case 1:
+      //   return (
+      //     <motion.div 
+      //       className="space-y-6"
+      //       initial={{ opacity: 0, x: 50 }}
+      //       animate={{ opacity: 1, x: 0 }}
+      //       exit={{ opacity: 0, x: -50 }}
+      //     >
+      //       <div className="text-center space-y-2 mb-8">
+      //         <h2 className="text-2xl font-semibold text-foreground">Select Service</h2>
+      //         <p className="text-muted-foreground">Choose the service you'd like to book</p>
+      //       </div>
+
+      //       <div className="grid gap-4">
+      //         {services.map((service) => (
+      //           <motion.div
+      //             key={service.id}
+      //             className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+      //               selectedService === service.id
+      //                 ? 'border-primary bg-primary/5'
+      //                 : 'border-border hover:border-primary/50 hover:bg-secondary/50'
+      //             }`}
+      //             onClick={() => setSelectedService(service.id)}
+      //             whileHover={{ scale: 1.02 }}
+      //             whileTap={{ scale: 0.98 }}
+      //           >
+      //             <div className="flex justify-between items-center">
+      //               <div className="space-y-1">
+      //                 <h3 className="font-medium text-foreground">{service.name}</h3>
+      //                 <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+      //                   <div className="flex items-center space-x-1">
+      //                     <Clock className="w-4 h-4" />
+      //                     <span>{service.duration}min</span>
+      //                   </div>
+      //                   <div className="flex items-center space-x-1">
+      //                     <span className="text-primary font-semibold">${service.price}</span>
+      //                   </div>
+      //                 </div>
+      //               </div>
+      //               {selectedService === service.id && (
+      //                 <motion.div
+      //                   initial={{ scale: 0 }}
+      //                   animate={{ scale: 1 }}
+      //                   className="w-6 h-6 rounded-full bg-primary flex items-center justify-center"
+      //                 >
+      //                   <Check className="w-4 h-4 text-primary-foreground" />
+      //                 </motion.div>
+      //               )}
+      //             </div>
+      //           </motion.div>
+      //         ))}
+      //       </div>
+      //     </motion.div>
+      //   );
+
       case 1:
-        return (
-          <motion.div 
-            className="space-y-6"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-          >
-            <div className="text-center space-y-2 mb-8">
-              <h2 className="text-2xl font-semibold text-foreground">Select Service</h2>
-              <p className="text-muted-foreground">Choose the service you'd like to book</p>
-            </div>
-
-            <div className="grid gap-4">
-              {services.map((service) => (
-                <motion.div
-                  key={service.id}
-                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                    selectedService === service.id
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50 hover:bg-secondary/50'
-                  }`}
-                  onClick={() => setSelectedService(service.id)}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className="flex justify-between items-center">
-                    <div className="space-y-1">
-                      <h3 className="font-medium text-foreground">{service.name}</h3>
-                      <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                        <div className="flex items-center space-x-1">
-                          <Clock className="w-4 h-4" />
-                          <span>{service.duration}min</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <span className="text-primary font-semibold">${service.price}</span>
-                        </div>
-                      </div>
-                    </div>
-                    {selectedService === service.id && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="w-6 h-6 rounded-full bg-primary flex items-center justify-center"
-                      >
-                        <Check className="w-4 h-4 text-primary-foreground" />
-                      </motion.div>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        );
-
-      case 2:
         return (
           <motion.div 
             className="space-y-6"
@@ -196,7 +262,7 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
           </motion.div>
         );
 
-      case 3:
+      case 2:
         return (
           <motion.div 
             className="space-y-6"
@@ -297,7 +363,7 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
           </motion.div>
         );
 
-      case 4:
+      case 3:
         return (
           <motion.div 
             className="text-center space-y-6"
@@ -363,10 +429,12 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
 
   const canProceed = () => {
     switch (step) {
-      case 1: return selectedService;
-      case 2: return selectedDate && selectedTime;
-      case 3: return selectedStylist && customerInfo.firstName && customerInfo.lastName && customerInfo.email && customerInfo.phone;
+
+      case 1: return selectedDate && selectedTime;
+      case 2: return selectedStylist && customerInfo.firstName && customerInfo.lastName && customerInfo.email && customerInfo.phone;
+      case 3: return true;
       default: return false;
+
     }
   };
 
@@ -375,10 +443,10 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto">
           {/* Progress Bar */}
-          {step < 4 && (
+          {step <= 3 && (
             <div className="mb-8">
               <div className="flex justify-between items-center mb-4">
-                {[1, 2, 3].map((stepNum) => (
+                {[1, 2].map((stepNum) => (
                   <div
                     key={stepNum}
                     className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${
@@ -407,7 +475,7 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
             {renderStepContent()}
 
             {/* Navigation Buttons */}
-            {step < 4 && (
+            {step < 3 && (
               <div className="flex justify-between mt-8">
                 <Button
                   variant="outline"
@@ -419,11 +487,11 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
                 </Button>
                 
                 <Button
-                  onClick={() => step < 3 ? setStep(step + 1) : handleBookingSubmit()}
-                  disabled={!canProceed()}
+                  onClick={() => step <= 3 ? setStep(step + 1) : handleBookingSubmit()}
+                  // disabled={!canProceed()}
                   className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 flex items-center space-x-2"
                 >
-                  <span>{step < 3 ? 'Next' : 'Confirm Booking'}</span>
+                  <span>{step < 2 ? 'Next' : step== 2 ? 'Review & Continue' :'Confirm Booking'}</span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </div>

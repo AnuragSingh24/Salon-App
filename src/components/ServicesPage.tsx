@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Scissors, Palette, Sparkles, Clock, DollarSign, Star, ArrowRight } from 'lucide-react';
 import { Card } from './ui/card';
@@ -6,115 +6,215 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
+// interface ServicesPageProps {
+//   setCurrentPage: (page: string) => void;
+// }
+
 interface ServicesPageProps {
   setCurrentPage: (page: string) => void;
 }
 
+type CategoryId = 'all' | 'hair' | 'spa' | 'nails' | 'makeup';
+
+interface Service {
+  id: number;
+  category: Exclude<CategoryId, 'all'>;
+  title: string;
+  description: string;
+  price: number;
+  duration: number;
+  popular: boolean;
+  rating: number;
+  // image is added client-side from static map
+  image?: string;
+}
+
+
+
 export function ServicesPage({ setCurrentPage }: ServicesPageProps) {
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  // const [selectedCategory, setSelectedCategory] = useState('all');
+
+  // const categories = [
+  //   { id: 'all', label: 'All Services' },
+  //   { id: 'hair', label: 'Hair Services' },
+  //   { id: 'spa', label: 'Spa & Wellness' },
+  //   { id: 'nails', label: 'Nail Care' },
+  //   { id: 'makeup', label: 'Makeup' }
+  // ];
+
+  // const services = [
+  //   {
+  //     id: 1,
+  //     category: 'hair',
+  //     title: 'Precision Haircut',
+  //     description: 'Expert cutting and styling tailored to your face shape and lifestyle.',
+  //     price: 85,
+  //     duration: 60,
+  //     image: 'https://images.unsplash.com/photo-1712481846921-d5df6dc4abfd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYWlyJTIwc3R5bGluZyUyMHNhbG9uJTIwd29tYW58ZW58MXx8fHwxNzU4NTE5NDQ1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+  //     popular: true,
+  //     rating: 4.9
+  //   },
+  //   {
+  //     id: 2,
+  //     category: 'hair',
+  //     title: 'Color Transformation',
+  //     description: 'Full color service with premium products for stunning results.',
+  //     price: 150,
+  //     duration: 120,
+  //     image: 'https://images.unsplash.com/photo-1712213396688-c6f2d536671f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYWlyJTIwY29sb3JpbmclMjBzYWxvbnxlbnwxfHx8fDE3NTg0OTQwMjJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+  //     popular: false,
+  //     rating: 4.8
+  //   },
+  //   {
+  //     id: 3,
+  //     category: 'hair',
+  //     title: 'Balayage Highlights',
+  //     description: 'Natural-looking highlights with hand-painted technique.',
+  //     price: 180,
+  //     duration: 150,
+  //     image: 'https://images.unsplash.com/photo-1712213396688-c6f2d536671f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYWlyJTIwY29sb3JpbmclMjBzYWxvbnxlbnwxfHx8fDE3NTg0OTQwMjJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+  //     popular: true,
+  //     rating: 4.9
+  //   },
+  //   {
+  //     id: 4,
+  //     category: 'spa',
+  //     title: 'Signature Facial',
+  //     description: 'Deep cleansing and rejuvenating facial treatment.',
+  //     price: 120,
+  //     duration: 90,
+  //     image: 'https://images.unsplash.com/photo-1731514771613-991a02407132?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmYWNpYWwlMjBzcGElMjB0cmVhdG1lbnR8ZW58MXx8fHwxNzU4NDMxMjUwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+  //     popular: false,
+  //     rating: 4.7
+  //   },
+  //   {
+  //     id: 5,
+  //     category: 'spa',
+  //     title: 'Relaxation Massage',
+  //     description: 'Full body massage for ultimate relaxation and stress relief.',
+  //     price: 110,
+  //     duration: 60,
+  //     image: 'https://images.unsplash.com/photo-1737352777897-e22953991a32?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYXNzYWdlJTIwdGhlcmFweSUyMHNwYXxlbnwxfHx8fDE3NTg1MTY5ODR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+  //     popular: true,
+  //     rating: 4.8
+  //   },
+  //   {
+  //     id: 6,
+  //     category: 'nails',
+  //     title: 'Luxury Manicure',
+  //     description: 'Complete nail care with premium polish and nail art.',
+  //     price: 65,
+  //     duration: 45,
+  //     image: 'https://images.unsplash.com/photo-1554424518-336ec861b705?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzcGElMjByZWxheGF0aW9uJTIwd2VsbG5lc3N8ZW58MXx8fHwxNzU4NTE5NDQ4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+  //     popular: false,
+  //     rating: 4.6
+  //   },
+  //   {
+  //     id: 7,
+  //     category: 'makeup',
+  //     title: 'Bridal Makeup',
+  //     description: 'Professional makeup for your special day with trial session.',
+  //     price: 200,
+  //     duration: 120,
+  //     image: 'https://images.unsplash.com/photo-1758188753373-5b01a0fc6d9d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBzYWxvbiUyMGludGVyaW9yJTIwbW9kZXJufGVufDF8fHx8MTc1ODQzMzk4Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+  //     popular: true,
+  //     rating: 5.0
+  //   },
+  //   {
+  //     id: 8,
+  //     category: 'makeup',
+  //     title: 'Event Makeup',
+  //     description: 'Glamorous makeup for special occasions and photoshoots.',
+  //     price: 95,
+  //     duration: 75,
+  //     image: 'https://images.unsplash.com/photo-1758188753373-5b01a0fc6d9d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBzYWxvbiUyMGludGVyaW9yJTIwbW9kZXJufGVufDF8fHx8MTc1ODQzMzk4Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+  //     popular: false,
+  //     rating: 4.8
+  //   }
+  // ];
+
+  // const filteredServices = selectedCategory === 'all' 
+  //   ? services 
+  //   : services.filter(service => service.category === selectedCategory);
+
+   const [selectedCategory, setSelectedCategory] = useState<CategoryId>('all');
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Static image links (unchanged)
+  const imageMap: Record<number, string> = {
+    1: 'https://images.unsplash.com/photo-1712481846921-d5df6dc4abfd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYWlyJTIwc3R5bGluZyUyMHNhbG9uJTIwd29tYW58ZW58MXx8fHwxNzU4NTE5NDQ1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+    2: 'https://images.unsplash.com/photo-1712213396688-c6f2d536671f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYWlyJTIwY29sb3JpbmclMjBzYWxvbnxlbnwxfHx8fDE3NTg0OTQwMjJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+    3: 'https://images.unsplash.com/photo-1712213396688-c6f2d536671f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYWlyJTIwY29sb3JpbmclMjBzYWxvbnxlbnwxfHx8fDE3NTg0OTQwMjJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+    4: 'https://images.unsplash.com/photo-1731514771613-991a02407132?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmYWNpYWwlMjBzcGElMjB0cmVhdG1lbnR8ZW58MXx8fHwxNzU4NDMxMjUwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+    5: 'https://images.unsplash.com/photo-1737352777897-e22953991a32?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYXNzYWdlJTIwdGhlcmFweSUyMHNwYXxlbnwxfHx8fDE3NTg1MTY5ODR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+    6: 'https://images.unsplash.com/photo-1554424518-336ec861b705?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzcGElMjByZWxheGF0aW9uJTIwd2VsbG5lc3N8ZW58MXx8fHwxNzU4NTE5NDQ4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+    7: 'https://images.unsplash.com/photo-1758188753373-5b01a0fc6d9d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBzYWxvbiUyMGludGVyaW9yJTIwbW9kZXJufGVufDF8fHx8MTc1ODQzMzk4Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+    8: 'https://images.unsplash.com/photo-1758188753373-5b01a0fc6d9d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBzYWxvbiUyMGludGVyaW9yJTIwbW9kZXJufGVufDF8fHx8MTc1ODQzMzk4Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+  };
 
   const categories = [
-    { id: 'all', label: 'All Services' },
-    { id: 'hair', label: 'Hair Services' },
-    { id: 'spa', label: 'Spa & Wellness' },
-    { id: 'nails', label: 'Nail Care' },
-    { id: 'makeup', label: 'Makeup' }
-  ];
+    { id: 'all',   label: 'All Services' },
+    { id: 'Hair',  label: 'Hair Services' },
+    { id: 'Spa',   label: 'Spa & Wellness' },
+    { id: 'Nails', label: 'Nail Care' },
+    { id: 'Makeup',label: 'Makeup' },
+  ] as const;
 
-  const services = [
-    {
-      id: 1,
-      category: 'hair',
-      title: 'Precision Haircut',
-      description: 'Expert cutting and styling tailored to your face shape and lifestyle.',
-      price: 85,
-      duration: 60,
-      image: 'https://images.unsplash.com/photo-1712481846921-d5df6dc4abfd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYWlyJTIwc3R5bGluZyUyMHNhbG9uJTIwd29tYW58ZW58MXx8fHwxNzU4NTE5NDQ1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      popular: true,
-      rating: 4.9
-    },
-    {
-      id: 2,
-      category: 'hair',
-      title: 'Color Transformation',
-      description: 'Full color service with premium products for stunning results.',
-      price: 150,
-      duration: 120,
-      image: 'https://images.unsplash.com/photo-1712213396688-c6f2d536671f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYWlyJTIwY29sb3JpbmclMjBzYWxvbnxlbnwxfHx8fDE3NTg0OTQwMjJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      popular: false,
-      rating: 4.8
-    },
-    {
-      id: 3,
-      category: 'hair',
-      title: 'Balayage Highlights',
-      description: 'Natural-looking highlights with hand-painted technique.',
-      price: 180,
-      duration: 150,
-      image: 'https://images.unsplash.com/photo-1712213396688-c6f2d536671f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYWlyJTIwY29sb3JpbmclMjBzYWxvbnxlbnwxfHx8fDE3NTg0OTQwMjJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      popular: true,
-      rating: 4.9
-    },
-    {
-      id: 4,
-      category: 'spa',
-      title: 'Signature Facial',
-      description: 'Deep cleansing and rejuvenating facial treatment.',
-      price: 120,
-      duration: 90,
-      image: 'https://images.unsplash.com/photo-1731514771613-991a02407132?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmYWNpYWwlMjBzcGElMjB0cmVhdG1lbnR8ZW58MXx8fHwxNzU4NDMxMjUwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      popular: false,
-      rating: 4.7
-    },
-    {
-      id: 5,
-      category: 'spa',
-      title: 'Relaxation Massage',
-      description: 'Full body massage for ultimate relaxation and stress relief.',
-      price: 110,
-      duration: 60,
-      image: 'https://images.unsplash.com/photo-1737352777897-e22953991a32?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYXNzYWdlJTIwdGhlcmFweSUyMHNwYXxlbnwxfHx8fDE3NTg1MTY5ODR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      popular: true,
-      rating: 4.8
-    },
-    {
-      id: 6,
-      category: 'nails',
-      title: 'Luxury Manicure',
-      description: 'Complete nail care with premium polish and nail art.',
-      price: 65,
-      duration: 45,
-      image: 'https://images.unsplash.com/photo-1554424518-336ec861b705?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzcGElMjByZWxheGF0aW9uJTIwd2VsbG5lc3N8ZW58MXx8fHwxNzU4NTE5NDQ4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      popular: false,
-      rating: 4.6
-    },
-    {
-      id: 7,
-      category: 'makeup',
-      title: 'Bridal Makeup',
-      description: 'Professional makeup for your special day with trial session.',
-      price: 200,
-      duration: 120,
-      image: 'https://images.unsplash.com/photo-1758188753373-5b01a0fc6d9d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBzYWxvbiUyMGludGVyaW9yJTIwbW9kZXJufGVufDF8fHx8MTc1ODQzMzk4Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      popular: true,
-      rating: 5.0
-    },
-    {
-      id: 8,
-      category: 'makeup',
-      title: 'Event Makeup',
-      description: 'Glamorous makeup for special occasions and photoshoots.',
-      price: 95,
-      duration: 75,
-      image: 'https://images.unsplash.com/photo-1758188753373-5b01a0fc6d9d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBzYWxvbiUyMGludGVyaW9yJTIwbW9kZXJufGVufDF8fHx8MTc1ODQzMzk4Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      popular: false,
-      rating: 4.8
-    }
-  ];
 
-  const filteredServices = selectedCategory === 'all' 
-    ? services 
-    : services.filter(service => service.category === selectedCategory);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const fetchServices = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setError('Not authenticated');
+          setLoading(false);
+          return;
+        }
+       
+ 
+      const param = selectedCategory === 'all' ? '' : `?category=${selectedCategory.toLowerCase()}`;
+      const res = await fetch(`/api/services${param}`, {
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, // ⬅️ token attached
+        },
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Failed: ${res.status} ${text}`);
+      }
+
+      const data: Service[] = await res.json();
+
+
+        // Attach static image links here:
+        const withImages = data.map(s => ({
+          ...s,
+          image: imageMap[s.id] ?? 'https://via.placeholder.com/800x600?text=Service',
+        }));
+        setServices(withImages);
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          setError(err.message || 'Something went wrong.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchServices();
+    return () => controller.abort();
+  }, [selectedCategory]);
+
+  const handleCategoryChange = (cat: CategoryId) => setSelectedCategory(cat);
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-secondary/30 to-accent/20">
@@ -173,7 +273,7 @@ export function ServicesPage({ setCurrentPage }: ServicesPageProps) {
             className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
             layout
           >
-            {filteredServices.map((service, index) => (
+            {services.map((service, index) => (
               <motion.div
                 key={service.id}
                 layout
@@ -239,7 +339,15 @@ export function ServicesPage({ setCurrentPage }: ServicesPageProps) {
                       
                       <Button
                         size="sm"
-                        onClick={() => setCurrentPage('booking')}
+                        onClick={() => {
+                       const isLoggedIn = JSON.parse(sessionStorage.getItem('isLoggedIn') ?? 'false') as boolean;
+                      if (isLoggedIn) {
+                          setCurrentPage('booking');
+                         } else {
+                         setCurrentPage('auth');
+                       }
+
+                        }}
                         className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 group-hover:scale-105 transition-transform"
                       >
                         Book Now
