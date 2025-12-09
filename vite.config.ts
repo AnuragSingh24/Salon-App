@@ -55,7 +55,7 @@
     },
     server: {
      
-   port: 3000, // your Vite port (default)
+   port: 3002, // your Vite port (default)
     // If your backend is on localhost:5000
     proxy: {
       '/api': {

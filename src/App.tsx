@@ -1,4 +1,4 @@
-import React, { useState, Suspense } from 'react';
+import React, { useState, Suspense ,useEffect} from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { FallbackPage } from './components/FallbackPage';
@@ -59,6 +59,22 @@ export default function App() {
   const [userRole, setUserRole] = useState('customer'); // 'customer' or 'admin'
   const [isLoading, setIsLoading] = useState(true);
   
+   useEffect(() => {
+    const token = localStorage.getItem("token");      // JWT
+    const isLogged = sessionStorage.getItem("isLoggedIn");
+
+    if (token && isLogged === "true") {
+      setIsAuthenticated(true);
+
+      // If you store role somewhere in localStorage:
+      const role = localStorage.getItem("role") || "user";
+      setUserRole(role);
+    } else {
+      setIsAuthenticated(false);
+      setUserRole("user");
+    }
+  }, []);
+
   // Initialize app
   React.useEffect(() => {
     // Simple initialization check
