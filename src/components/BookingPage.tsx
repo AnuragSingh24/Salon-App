@@ -1,592 +1,4 @@
-// import React, { useState , useEffect} from 'react';
-// import { motion } from 'motion/react';
-// import { Calendar, Clock, User, Check, ArrowLeft, ArrowRight, Star } from 'lucide-react';
-// import { Button } from './ui/button';
-// import { Card } from './ui/card';
-// import { Input } from './ui/input';
-// import { Label } from './ui/label';
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-// import { Badge } from './ui/badge';
 
-// interface BookingPageProps {
-//   setCurrentPage: (page: string) => void;
-// }
-
-// type Stylist = {
-//   id: string;
-//   name: string;
-//   specialty: string;
-//   rating: number;
-//   image: string;
-// };
-// type AvailabilityResponse = {
-//   available: boolean;
-//   reason?: string;
-//   stylist?: {
-//     _id: string;
-//     name: string;
-//     specialty?: string;
-//     rating?: number;
-//     // ...any other fields you return from Stylist
-//   };
-// };
-
-
-
-
-// function getToken() {
-//   try {
-//     return localStorage.getItem('token');
-//   } catch {
-//     return null;
-//   }
-// }
-
-// async function fetchStylists(): Promise<Stylist[]> {
-//   const token = getToken();
-//   if (!token) throw new Error('Not authenticated. Please login.');
-
-//   const res = await fetch('/api/stylist', {
-//     headers: {
-//       'Content-Type': 'application/json',
-//       'Authorization': `Bearer ${token}`,
-//     },
-//   });
-
-//   if (!res.ok) {
-//     const text = await res.text();
-//     throw new Error(`Failed: ${res.status} ${text}`);
-//   }
-//   return res.json();
-// }
-
-
-
-
-// export function BookingPage({ setCurrentPage }: BookingPageProps) {
-//   const [step, setStep] = useState(1);
-//   const [selectedService, setSelectedService] = useState('');
-//   const [selectedDate, setSelectedDate] = useState('');
-//   const [selectedTime, setSelectedTime] = useState('');
-//   const [selectedStylist, setSelectedStylist] = useState('');
-//   const [customerInfo, setCustomerInfo] = useState({
-//     firstName: '',
-//     lastName: '',
-//     email: '',
-//     phone: ''
-//   });
-
-// const [stylists, setStylists] = useState<Stylist[]>([]);
-// const [loading, setLoading] = useState(true);
-// const [error, setError] = useState<string | null>(null);
-
-
-//   const services = [
-//     { id: 'haircut', name: 'Precision Haircut', price: 85, duration: 60 },
-//     { id: 'color', name: 'Color Transformation', price: 150, duration: 120 },
-//     { id: 'highlights', name: 'Balayage Highlights', price: 180, duration: 150 },
-//     { id: 'facial', name: 'Signature Facial', price: 120, duration: 90 },
-//     { id: 'massage', name: 'Relaxation Massage', price: 110, duration: 60 },
-//     { id: 'manicure', name: 'Luxury Manicure', price: 65, duration: 45 },
-//   ];
-
-  
-//   useEffect(() => {
-//   (async () => {
-//     setLoading(true); setError(null);
-//     try {
-//       // Optionally seed if first load—uncomment if desired:
-//       // await seedStylists();
-//       const data = await fetchStylists();
-//       setStylists(data);
-//     } catch (err: any) {
-//       setError(err.message || 'Something went wrong.');
-//     } finally {
-//       setLoading(false);
-//     }
-//   })();
-// }, []);
-
-
-
- 
-//   const timeSlots = [
-//     '9:00 AM', '9:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
-//     '12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM', '2:00 PM', '2:30 PM',
-//     '3:00 PM', '3:30 PM', '4:00 PM', '4:30 PM', '5:00 PM', '5:30 PM'
-//   ];
-
-//   const generateCalendarDays = () => {
-//     const today = new Date();
-//     const days = [];
-    
-//     for (let i = 0; i < 14; i++) {
-//       const date = new Date(today);
-//       date.setDate(today.getDate() + i);
-//       days.push({
-//         date: date.toISOString().split('T')[0],
-//         day: date.getDate(),
-//         weekday: date.toLocaleDateString('en-US', { weekday: 'short' }),
-//         isToday: i === 0
-//       });
-//     }
-//     return days;
-//   };
-
-//   const calendarDays = generateCalendarDays();
-//   const selectedServiceObj = services.find(s => s.id === selectedService);
-
-//   async function handleBookingSubmit() {
-//   try {
-//     const token = localStorage.getItem("token");
-    
-//     const res = await fetch("/api/bookings/create", {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         "Authorization": `Bearer ${token}`
-//       },
-//       body: JSON.stringify({
-//         userId: "USER_ID_FROM_TOKEN",
-//         date: selectedDate,
-//         timeSlot: selectedTime,
-//         stylistIds: [selectedStylist],
-//         serviceIds: [selectedService],
-//         totalPrice: selectedServiceObj?.price
-//       })
-//     });
-
-//     const data = await res.json();
-
-//     if (!res.ok) {
-//       alert(data.error);
-//       return;
-//     }
-
-//     setStep(4);
-
-//   } catch (err) {
-//     alert("Booking failed.");
-//   }
-// }
-
-
-//   async function handleReviewAndContinue() {
-//   if (step !== 2) return setStep(step + 1);
-
-//   try {
-//     const token = localStorage.getItem("token");
-
-//     const res = await fetch("/api/bookings/check", {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         "Authorization": `Bearer ${token}`
-//       },
-//       body: JSON.stringify({
-//         date: selectedDate,
-//         timeSlot: selectedTime,
-//         stylistId: selectedStylist
-//       })
-//     });
-
-//     const data = await res.json();
-
-//     if (!data.available) {
-//       alert(data.message || "Selected slot is unavailable. Please choose another.");
-//       return;
-//     }
-
-//     // If slot is available → go to next step
-//     setStep(3);
-
-//   } catch (err) {
-//     alert("Error checking availability.");
-//   }
-// }
-
-
-
-//   const renderStepContent = () => {
-//     switch (step) {
-//       // case 1:
-//       //   return (
-//       //     <motion.div 
-//       //       className="space-y-6"
-//       //       initial={{ opacity: 0, x: 50 }}
-//       //       animate={{ opacity: 1, x: 0 }}
-//       //       exit={{ opacity: 0, x: -50 }}
-//       //     >
-//       //       <div className="text-center space-y-2 mb-8">
-//       //         <h2 className="text-2xl font-semibold text-foreground">Select Service</h2>
-//       //         <p className="text-muted-foreground">Choose the service you'd like to book</p>
-//       //       </div>
-
-//       //       <div className="grid gap-4">
-//       //         {services.map((service) => (
-//       //           <motion.div
-//       //             key={service.id}
-//       //             className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-//       //               selectedService === service.id
-//       //                 ? 'border-primary bg-primary/5'
-//       //                 : 'border-border hover:border-primary/50 hover:bg-secondary/50'
-//       //             }`}
-//       //             onClick={() => setSelectedService(service.id)}
-//       //             whileHover={{ scale: 1.02 }}
-//       //             whileTap={{ scale: 0.98 }}
-//       //           >
-//       //             <div className="flex justify-between items-center">
-//       //               <div className="space-y-1">
-//       //                 <h3 className="font-medium text-foreground">{service.name}</h3>
-//       //                 <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-//       //                   <div className="flex items-center space-x-1">
-//       //                     <Clock className="w-4 h-4" />
-//       //                     <span>{service.duration}min</span>
-//       //                   </div>
-//       //                   <div className="flex items-center space-x-1">
-//       //                     <span className="text-primary font-semibold">${service.price}</span>
-//       //                   </div>
-//       //                 </div>
-//       //               </div>
-//       //               {selectedService === service.id && (
-//       //                 <motion.div
-//       //                   initial={{ scale: 0 }}
-//       //                   animate={{ scale: 1 }}
-//       //                   className="w-6 h-6 rounded-full bg-primary flex items-center justify-center"
-//       //                 >
-//       //                   <Check className="w-4 h-4 text-primary-foreground" />
-//       //                 </motion.div>
-//       //               )}
-//       //             </div>
-//       //           </motion.div>
-//       //         ))}
-//       //       </div>
-//       //     </motion.div>
-//       //   );
-
-//       case 1:
-//         return (
-//           <motion.div 
-//             className="space-y-6"
-//             initial={{ opacity: 0, x: 50 }}
-//             animate={{ opacity: 1, x: 0 }}
-//             exit={{ opacity: 0, x: -50 }}
-//           >
-//             <div className="text-center space-y-2 mb-8">
-//               <h2 className="text-2xl font-semibold text-foreground">Select Date & Time</h2>
-//               <p className="text-muted-foreground">Choose your preferred appointment time</p>
-//             </div>
-
-//             <div className="space-y-6">
-//               {/* Calendar */}
-//               <div>
-//                 <Label className="text-base font-medium mb-4 block">Select Date</Label>
-//                 <div className="grid grid-cols-7 gap-2">
-//                   {calendarDays.map((day) => (
-//                     <motion.button
-//                       key={day.date}
-//                       className={`p-3 rounded-lg text-center transition-all ${
-//                         selectedDate === day.date
-//                           ? 'bg-primary text-primary-foreground'
-//                           : 'border border-border hover:border-primary hover:bg-secondary'
-//                       } ${day.isToday ? 'ring-2 ring-primary/20' : ''}`}
-//                       onClick={() => setSelectedDate(day.date)}
-//                       whileHover={{ scale: 1.05 }}
-//                       whileTap={{ scale: 0.95 }}
-//                     >
-//                       <div className="text-xs text-muted-foreground">{day.weekday}</div>
-//                       <div className="font-medium">{day.day}</div>
-//                     </motion.button>
-//                   ))}
-//                 </div>
-//               </div>
-
-//               {/* Time Slots */}
-//               {selectedDate && (
-//                 <motion.div
-//                   initial={{ opacity: 0, y: 20 }}
-//                   animate={{ opacity: 1, y: 0 }}
-//                 >
-//                   <Label className="text-base font-medium mb-4 block">Select Time</Label>
-//                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-//                     {timeSlots.map((time) => (
-//                       <motion.button
-//                         key={time}
-//                         className={`p-3 rounded-lg text-center transition-all ${
-//                           selectedTime === time
-//                             ? 'bg-primary text-primary-foreground'
-//                             : 'border border-border hover:border-primary hover:bg-secondary'
-//                         }`}
-//                         onClick={() => setSelectedTime(time)}
-//                         whileHover={{ scale: 1.05 }}
-//                         whileTap={{ scale: 0.95 }}
-//                       >
-//                         {time}
-//                       </motion.button>
-//                     ))}
-//                   </div>
-//                 </motion.div>
-//               )}
-//             </div>
-//           </motion.div>
-//         );
-
-//       case 2:
-//         return (
-//           <motion.div 
-//             className="space-y-6"
-//             initial={{ opacity: 0, x: 50 }}
-//             animate={{ opacity: 1, x: 0 }}
-//             exit={{ opacity: 0, x: -50 }}
-//           >
-//             <div className="text-center space-y-2 mb-8">
-//               <h2 className="text-2xl font-semibold text-foreground">Select Stylist & Details</h2>
-//               <p className="text-muted-foreground">Choose your stylist and provide your information</p>
-//             </div>
-
-//             <div className="space-y-6">
-//               {/* Stylist Selection */}
-//               <div>
-//                 <Label className="text-base font-medium mb-4 block">Choose Your Stylist</Label>
-//                 <div className="grid sm:grid-cols-2 gap-4">
-//                   {stylists.map((stylist) => (
-//                     <motion.div
-//                       key={stylist.id}
-//                       className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-//                         selectedStylist === stylist.id
-//                           ? 'border-primary bg-primary/5'
-//                           : 'border-border hover:border-primary/50 hover:bg-secondary/50'
-//                       }`}
-//                       onClick={() => setSelectedStylist(stylist.id)}
-//                       whileHover={{ scale: 1.02 }}
-//                       whileTap={{ scale: 0.98 }}
-//                     >
-//                       <div className="flex items-center space-x-4">
-//                         <div className="w-12 h-12 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center">
-//                           <User className="w-6 h-6 text-primary-foreground" />
-//                         </div>
-//                         <div className="flex-1">
-//                           <h3 className="font-medium text-foreground">{stylist.name}</h3>
-//                           <p className="text-sm text-muted-foreground">{stylist.specialty}</p>
-//                           <div className="flex items-center space-x-1 mt-1">
-//                             <Star className="w-4 h-4 text-yellow-400 fill-current" />
-//                             <span className="text-sm font-medium">{stylist.rating}</span>
-//                           </div>
-//                         </div>
-//                         {selectedStylist === stylist.id && (
-//                           <motion.div
-//                             initial={{ scale: 0 }}
-//                             animate={{ scale: 1 }}
-//                             className="w-6 h-6 rounded-full bg-primary flex items-center justify-center"
-//                           >
-//                             <Check className="w-4 h-4 text-primary-foreground" />
-//                           </motion.div>
-//                         )}
-//                       </div>
-//                     </motion.div>
-//                   ))}
-//                 </div>
-//               </div>
-
-//               {/* Customer Information */}
-//               <div className="grid sm:grid-cols-2 gap-4">
-//                 <div className="space-y-2">
-//                   <Label htmlFor="firstName">First Name</Label>
-//                   <Input
-//                     id="firstName"
-//                     value={customerInfo.firstName}
-//                     onChange={(e) => setCustomerInfo({...customerInfo, firstName: e.target.value})}
-//                     className="rounded-lg"
-//                   />
-//                 </div>
-//                 <div className="space-y-2">
-//                   <Label htmlFor="lastName">Last Name</Label>
-//                   <Input
-//                     id="lastName"
-//                     value={customerInfo.lastName}
-//                     onChange={(e) => setCustomerInfo({...customerInfo, lastName: e.target.value})}
-//                     className="rounded-lg"
-//                   />
-//                 </div>
-//                 <div className="space-y-2">
-//                   <Label htmlFor="email">Email</Label>
-//                   <Input
-//                     id="email"
-//                     type="email"
-//                     value={customerInfo.email}
-//                     onChange={(e) => setCustomerInfo({...customerInfo, email: e.target.value})}
-//                     className="rounded-lg"
-//                   />
-//                 </div>
-//                 <div className="space-y-2">
-//                   <Label htmlFor="phone">Phone Number</Label>
-//                   <Input
-//                     id="phone"
-//                     value={customerInfo.phone}
-//                     onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})}
-//                     className="rounded-lg"
-//                   />
-//                 </div>
-//               </div>
-//             </div>
-//           </motion.div>
-//         );
-
-//       case 3:
-//         return (
-//           <motion.div 
-//             className="text-center space-y-6"
-//             initial={{ opacity: 0, scale: 0.9 }}
-//             animate={{ opacity: 1, scale: 1 }}
-//           >
-//             <motion.div
-//               className="w-20 h-20 mx-auto rounded-full bg-green-100 flex items-center justify-center"
-//               initial={{ scale: 0 }}
-//               animate={{ scale: 1 }}
-//               transition={{ delay: 0.2, type: "spring" }}
-//             >
-//               <Check className="w-10 h-10 text-green-600" />
-//             </motion.div>
-//             <div className="space-y-4">
-//               <h2 className="text-2xl font-semibold text-foreground">Booking Confirmed!</h2>
-//               <p className="text-muted-foreground">
-//                 Your appointment has been successfully booked. We've sent a confirmation email with all the details.
-//               </p>
-//             </div>
-            
-//             <Card className="p-6 text-left bg-gradient-to-r from-secondary to-accent border-0">
-//               <h3 className="font-semibold text-foreground mb-4">Appointment Details</h3>
-//               <div className="space-y-3 text-sm">
-//                 <div className="flex justify-between">
-//                   <span className="text-muted-foreground">Service:</span>
-//                   <span className="font-medium">{selectedServiceObj?.name}</span>
-//                 </div>
-//                 <div className="flex justify-between">
-//                   <span className="text-muted-foreground">Date:</span>
-//                   <span className="font-medium">{selectedDate}</span>
-//                 </div>
-//                 <div className="flex justify-between">
-//                   <span className="text-muted-foreground">Time:</span>
-//                   <span className="font-medium">{selectedTime}</span>
-//                 </div>
-//                 <div className="flex justify-between">
-//                   <span className="text-muted-foreground">Duration:</span>
-//                   <span className="font-medium">{selectedServiceObj?.duration} minutes</span>
-//                 </div>
-//                 <div className="flex justify-between">
-//                   <span className="text-muted-foreground">Total:</span>
-//                   <span className="font-semibold text-primary">${selectedServiceObj?.price}</span>
-//                 </div>
-//               </div>
-//             </Card>
-
-//             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-//               <Button onClick={() => setCurrentPage('home')} variant="outline">
-//                 Back to Home
-//               </Button>
-//               <Button onClick={() => setCurrentPage('profile')} className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0">
-//                 View My Bookings
-//               </Button>
-//             </div>
-//           </motion.div>
-//         );
-
-//       default:
-//         return null;
-//     }
-//   };
-
-//   const canProceed = () => {
-//     switch (step) {
-
-//       case 1: return selectedDate && selectedTime;
-//       case 2: return selectedStylist && customerInfo.firstName && customerInfo.lastName && customerInfo.email && customerInfo.phone;
-//       case 3: return true;
-//       default: return false;
-
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen bg-gradient-to-br from-white via-secondary/30 to-accent/20">
-//       <div className="container mx-auto px-4 py-12">
-//         <div className="max-w-2xl mx-auto">
-//           {/* Progress Bar */}
-//           {step <= 3 && (
-//             <div className="mb-8">
-//               <div className="flex justify-between items-center mb-4">
-//                 {[1, 2].map((stepNum) => (
-//                   <div
-//                     key={stepNum}
-//                     className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${
-//                       step >= stepNum
-//                         ? 'border-primary bg-primary text-primary-foreground'
-//                         : 'border-border bg-background text-muted-foreground'
-//                     }`}
-//                   >
-//                     {step > stepNum ? <Check className="w-5 h-5" /> : stepNum}
-//                   </div>
-//                 ))}
-//               </div>
-//               <div className="w-full bg-border rounded-full h-2">
-//                 <motion.div
-//                   className="bg-gradient-to-r from-primary to-accent h-2 rounded-full"
-//                   initial={{ width: 0 }}
-//                   animate={{ width: `${((step - 1) / 2) * 100}%` }}
-//                   transition={{ duration: 0.5 }}
-//                 />
-//               </div>
-//             </div>
-//           )}
-
-//           {/* Step Content */}
-//           <Card className="p-6 md:p-8 bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-//             {renderStepContent()}
-
-//             {/* Navigation Buttons */}
-//            {/* Navigation Buttons */}
-// {step < 3 && (
-//   <div className="flex justify-between mt-8">
-    
-//     {/* Previous / Back Button */}
-//     <Button
-//       variant="outline"
-//       onClick={() => step > 1 ? setStep(step - 1) : setCurrentPage('services')}
-//       className="flex items-center space-x-2"
-//     >
-//       <ArrowLeft className="w-4 h-4" />
-//       <span>{step > 1 ? 'Previous' : 'Back to Services'}</span>
-//     </Button>
-
-//     {/* Next / Review / Confirm Button */}
-//     <Button
-//       onClick={
-//         step === 1
-//           ? () => setStep(2)               // Step 1 → Step 2
-//           : step === 2
-//           ? handleReviewAndContinue        // Step 2 → Step 3 (check availability)
-//           : handleBookingSubmit            // Step 3 → Confirmation
-//       }
-//       className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 flex items-center space-x-2"
-//     >
-//       <span>
-//         {step === 1
-//           ? 'Next'
-//           : step === 2
-//           ? 'Review & Continue'
-//           : 'Confirm Booking'}
-//       </span>
-//       <ArrowRight className="w-4 h-4" />
-//     </Button>
-//   </div>
-// )}
-
-//           </Card>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Calendar, Clock, User, Check, ArrowLeft, ArrowRight, Star } from 'lucide-react';
@@ -646,8 +58,16 @@ async function fetchStylists(): Promise<Stylist[]> {
 }
 
 export function BookingPage({ setCurrentPage }: BookingPageProps) {
+  const storedBooking = sessionStorage.getItem('selectedBooking');
+  const selectedBooking = storedBooking ? JSON.parse(storedBooking) : null;
+  useEffect(() => {
+    if (!selectedBooking) {
+      setCurrentPage('home');
+    }
+  }, []);
+
   const [step, setStep] = useState(1);
-  const [selectedService, setSelectedService] = useState('');
+
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [selectedStylist, setSelectedStylist] = useState(''); // will store stylist _id
@@ -658,20 +78,14 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
     phone: ''
   });
 
+
   const [stylists, setStylists] = useState<Stylist[]>([]);
   const [loadingStylists, setLoadingStylists] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [checkingSlot, setCheckingSlot] = useState(false);
   const [creatingBooking, setCreatingBooking] = useState(false);
 
-  const services = [
-    { id: 'haircut', name: 'Precision Haircut', price: 85, duration: 60 },
-    { id: 'color', name: 'Color Transformation', price: 150, duration: 120 },
-    { id: 'highlights', name: 'Balayage Highlights', price: 180, duration: 150 },
-    { id: 'facial', name: 'Signature Facial', price: 120, duration: 90 },
-    { id: 'massage', name: 'Relaxation Massage', price: 110, duration: 60 },
-    { id: 'manicure', name: 'Luxury Manicure', price: 65, duration: 45 },
-  ];
+
 
   useEffect(() => {
     (async () => {
@@ -712,57 +126,9 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
   };
 
   const calendarDays = generateCalendarDays();
-  const selectedServiceObj = services.find(s => s.id === selectedService);
 
-  async function handleBookingSubmit() {
-    // final create booking call
-    if (!selectedDate || !selectedTime || !selectedStylist || !selectedService) {
-      alert('Please complete the booking details before confirming.');
-      return;
-    }
-
-    setCreatingBooking(true);
-    try {
-      const token = getToken();
-      const body = {
-        date: selectedDate,
-        timeSlot: selectedTime,
-        stylistId: selectedStylist,
-        serviceId: selectedService,
-        customerInfo: {
-          firstName: customerInfo.firstName,
-          lastName: customerInfo.lastName,
-          email: customerInfo.email,
-          phone: customerInfo.phone
-        },
-        totalPrice: selectedServiceObj?.price
-      };
-
-      const res = await fetch('/api/bookings/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(body)
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        alert(data.error || 'Booking failed. Try again.');
-        return;
-      }
-
-      setStep(4); // success/confirmation step
-    } catch (err) {
-      alert('Booking failed. Please try again.');
-    } finally {
-      setCreatingBooking(false);
-    }
-  }
 
   async function handleReviewAndContinue() {
-    // only for step 2 -> check slot and go to review (step 3)
     if (step !== 2) return setStep(step + 1);
 
     if (!selectedDate || !selectedTime || !selectedStylist) {
@@ -774,7 +140,8 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
     try {
       const token = getToken();
 
-      const res = await fetch('/api/bookings/check', {
+      // 1️⃣ CHECK AVAILABILITY
+      const checkRes = await fetch('/api/bookings/check', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -787,25 +154,62 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
         })
       });
 
-      const data: AvailabilityResponse = await res.json();
+      const checkData: AvailabilityResponse = await checkRes.json();
 
-      if (!res.ok) {
-        alert(data?.reason || data?.available === false ? (data.reason || 'Slot not available') : 'Error checking slot');
+      if (!checkRes.ok || !checkData.available) {
+        alert(checkData.reason || 'Selected slot is unavailable. Please choose another.');
         return;
       }
 
-      if (!data.available) {
-        alert(data.reason || 'Selected slot is unavailable. Please choose another.');
-        return;
-      }
+      // 2️⃣ CREATE BOOKING AFTER CHECK SUCCESS
+      setCreatingBooking(true);
+      const bookingRes = await fetch('/api/bookings/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          bookingType: selectedBooking.bookingType, // service | package | appointment
 
-      setStep(3); // proceed to review (confirmation) step
+          serviceIds:
+            selectedBooking.bookingType === 'service'
+              ? [selectedBooking.serviceId]
+              : [],
+
+          packageId:
+            selectedBooking.bookingType === 'package'
+              ? selectedBooking.packageId
+              : null,
+
+          date: selectedDate,
+          timeSlot: selectedTime,
+          stylistIds: [selectedStylist],
+          customerInfo,
+          totalPrice:
+            selectedBooking.bookingType === 'appointment'
+              ? 0
+              : selectedBooking.price
+        })
+
+
+      });
+
+      const bookingData = await bookingRes.json();
+
+
+      // 3️⃣ GOTO SUCCESS PAGE
+      setStep(3);
+
+
     } catch (err) {
-      alert('Error checking availability. Try again.');
+      alert('Error processing booking. Try again.');
     } finally {
       setCheckingSlot(false);
+      setCreatingBooking(false);
     }
   }
+
 
   const renderStepContent = () => {
     switch (step) {
@@ -830,11 +234,10 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
                   {calendarDays.map((day) => (
                     <motion.button
                       key={day.date}
-                      className={`p-3 rounded-lg text-center transition-all ${
-                        selectedDate === day.date
-                          ? 'bg-primary text-primary-foreground'
-                          : 'border border-border hover:border-primary hover:bg-secondary'
-                      } ${day.isToday ? 'ring-2 ring-primary/20' : ''}`}
+                      className={`p-3 rounded-lg text-center transition-all ${selectedDate === day.date
+                        ? 'bg-primary text-primary-foreground'
+                        : 'border border-border hover:border-primary hover:bg-secondary'
+                        } ${day.isToday ? 'ring-2 ring-primary/20' : ''}`}
                       onClick={() => setSelectedDate(day.date)}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
@@ -856,11 +259,10 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
                     {timeSlots.map((time) => (
                       <motion.button
                         key={time}
-                        className={`p-3 rounded-lg text-center transition-all ${
-                          selectedTime === time
-                            ? 'bg-primary text-primary-foreground'
-                            : 'border border-border hover:border-primary hover:bg-secondary'
-                        }`}
+                        className={`p-3 rounded-lg text-center transition-all ${selectedTime === time
+                          ? 'bg-primary text-primary-foreground'
+                          : 'border border-border hover:border-primary hover:bg-secondary'
+                          }`}
                         onClick={() => setSelectedTime(time)}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -901,11 +303,10 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
                     {stylists.map((stylist) => (
                       <motion.div
                         key={stylist._id}
-                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                          selectedStylist === stylist._id
-                            ? 'border-primary bg-primary/5'
-                            : 'border-border hover:border-primary/50 hover:bg-secondary/50'
-                        }`}
+                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${selectedStylist === stylist._id
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50 hover:bg-secondary/50'
+                          }`}
                         onClick={() => setSelectedStylist(stylist._id)}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
@@ -1008,8 +409,16 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
               <h3 className="font-semibold text-foreground mb-4">Appointment Details</h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Service:</span>
-                  <span className="font-medium">{selectedServiceObj?.name}</span>
+                  <span className="text-muted-foreground">
+                    {selectedBooking.bookingType === 'service'
+                      ? 'Service:'
+                      : selectedBooking.bookingType === 'package'
+                        ? 'Package:'
+                        : 'Appointment:'}
+
+                  </span>
+                  <span className="font-medium">{selectedBooking.name}</span>
+
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Date:</span>
@@ -1019,14 +428,19 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
                   <span className="text-muted-foreground">Time:</span>
                   <span className="font-medium">{selectedTime}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Duration:</span>
-                  <span className="font-medium">{selectedServiceObj?.duration} minutes</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total:</span>
-                  <span className="font-semibold text-primary">${selectedServiceObj?.price}</span>
-                </div>
+                {selectedBooking.bookingType !== 'appointment' && (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Duration:</span>
+                      <span className="font-medium">{selectedBooking.duration} minutes</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Total:</span>
+                      <span className="font-semibold text-primary">${selectedBooking.price}</span>
+                    </div>
+                  </>
+                )}
+
               </div>
             </Card>
 
@@ -1065,11 +479,10 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
                 {[1, 2].map((stepNum) => (
                   <div
                     key={stepNum}
-                    className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${
-                      step >= stepNum
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-border bg-background text-muted-foreground'
-                    }`}
+                    className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${step >= stepNum
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border bg-background text-muted-foreground'
+                      }`}
                   >
                     {step > stepNum ? <Check className="w-5 h-5" /> : stepNum}
                   </div>
@@ -1107,9 +520,10 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
                       step === 1
                         ? () => setStep(2)
                         : step === 2
-                          ? handleReviewAndContinue
-                          : handleBookingSubmit
+                          ? handleReviewAndContinue  // now CHECK + CREATE BOOKING
+                          : undefined
                     }
+
                     disabled={!canProceed() || checkingSlot || creatingBooking}
                     className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 flex items-center space-x-2"
                   >

@@ -1,4 +1,4 @@
-import React, { useState , useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { motion } from 'motion/react';
 import { User, Calendar, Clock, Star, Edit, Settings, Gift, History, Phone, Mail, MapPin } from 'lucide-react';
@@ -37,8 +37,8 @@ type Appointment = {
 
 
 export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
- 
- const [userInfo, setUserInfo] = useState<UserInfo>({
+
+  const [userInfo, setUserInfo] = useState<UserInfo>({
     firstName: '',
     lastName: '',
     email: '',
@@ -49,6 +49,10 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [appointmentHistory, setAppointmentHistory] = useState<any[]>([]);
+  const [hoveredRating, setHoveredRating] = useState<number | null>(null);
+  const [submittingReview, setSubmittingReview] = useState<string | null>(null);
+
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -135,7 +139,7 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
     }
   };
 
-  
+
 
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([
     // (Optional) initial static entries while loading, can be empty
@@ -144,7 +148,7 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (!token) return; // not authenticated; keep static/fallback
+    if (!token) return;
 
     (async () => {
       try {
@@ -154,71 +158,184 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
 
         const contentType = res.headers.get('content-type') || '';
         let data: any;
+
         if (contentType.includes('application/json')) {
           data = await res.json();
         } else {
           const text = await res.text();
-          try { data = JSON.parse(text); } catch { data = { error: text }; }
+          try {
+            data = JSON.parse(text);
+          } catch {
+            data = { error: text };
+          }
         }
 
-        if (!res.ok) throw new Error(data?.error || `Failed (${res.status})`);
+        if (!res.ok) {
+          throw new Error(data?.error || `Failed (${res.status})`);
+        }
 
-        // Map backend Booking docs to your UI shape
         const mapped: Appointment[] = (data.bookings || []).map((b: any) => ({
           id: b._id,
+
+          bookingType: b.bookingType, // ✅ CRITICAL
+
           service:
-            (Array.isArray(b.serviceIds) && b.serviceIds[0]?.name) || // if populated
-            b.serviceName ||                                          // if you store a name field
-            'Service',
-          stylist:
-            (Array.isArray(b.stylistIds) && b.stylistIds[0]?.name) ||
-            b.stylistName ||
-            'Stylist',
+            b.bookingType === 'service'
+              ? b.serviceIds?.[0]?.name || 'Service'
+              : null,
+
+          packageName:
+            b.bookingType === 'package'
+              ? b.packageId?.name || 'Package'
+              : null,
+
+          stylist: b.stylistIds?.[0]?.name || 'Stylist',
+
           date: b.date ? new Date(b.date).toISOString().slice(0, 10) : '',
           time: b.timeSlot || '',
-          duration: b.duration ?? 0,
           price: b.totalPrice ?? 0,
-          status: b.status,
+          status: b.status
         }));
+
 
         setUpcomingAppointments(mapped);
       } catch (err) {
         console.error('Fetch upcoming bookings error:', err);
-        // Optional: keep static/fallback data if fetch fails
       }
     })();
   }, []);
 
 
-  const appointmentHistory = [
-    {
-      id: 3,
-      service: 'Precision Haircut',
-      stylist: 'Emma Rodriguez',
-      date: '2023-12-20',
-      time: '3:30 PM',
-      price: 85,
-      rating: 5,
-    },
-    {
-      id: 4,
-      service: 'Relaxation Massage',
-      stylist: 'Maria Santos',
-      date: '2023-11-28',
-      time: '1:00 PM',
-      price: 110,
-      rating: 5,
-    },
-    {
-      id: 5,
-      service: 'Color Transformation',
-      stylist: 'Sarah Chen',
-      date: '2023-10-15',
-      time: '10:00 AM',
-      price: 150,
-      rating: 4,
-    },
-  ];
+
+  const handleCancelBooking = async (bookingId: string | number) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Not authenticated');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to cancel this appointment?')) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/profile/cancel/${bookingId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to cancel booking');
+
+      // ✅ Remove from UI after successful delete
+      setUpcomingAppointments(prev =>
+        prev.filter(app => app.id !== bookingId)
+      );
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const getBookingTag = (bookingType: string) => {
+    switch (bookingType) {
+      case 'service':
+        return { label: 'Service Booking', color: 'bg-blue-100 text-blue-700' };
+      case 'package':
+        return { label: 'Package Booking', color: 'bg-purple-100 text-purple-700' };
+      case 'appointment':
+        return { label: 'General Appointment', color: 'bg-green-100 text-green-700' };
+      default:
+        return { label: 'Unknown', color: 'bg-gray-100 text-gray-700' };
+    }
+  };
+
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    (async () => {
+      try {
+        const res = await fetch('/api/profile/history', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to fetch history');
+
+        // ⚠️ Backend returns { bookings: formatted }
+        const mapped = (data.bookings || []).map((b: any) => ({
+          id: b.id,
+          service: b.serviceTitle,
+          stylist: b.stylistName,
+          date: b.date ? new Date(b.date).toISOString().slice(0, 10) : '',
+          time: b.time,
+          price: b.price ?? 0,
+          rating: b.review?.rating ?? 0,
+        }));
+        setAppointmentHistory(mapped);
+
+      } catch (err) {
+        console.error('Fetch history error:', err);
+      }
+    })();
+  }, []);
+
+
+  const handleSubmitReview = async (bookingId: string, rating: number) => {
+    const token = localStorage.getItem('token');
+    console.log(token);
+    if (!token) return alert('Not authenticated');
+
+    try {
+      setSubmittingReview(bookingId);
+
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ bookingId, rating }),
+      });
+
+      const data = await res.json();
+
+
+      if (!res.ok) throw new Error(data.error || 'Failed to submit review');
+
+      // ✅ Update UI instantly
+      setAppointmentHistory(prev =>
+        prev.map(app =>
+          app.id === bookingId
+            ? { ...app, rating }
+            : app
+        )
+      );
+
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setSubmittingReview(null);
+    }
+  };
+
+  console.log(appointmentHistory);
+
+  const ratedAppointments = appointmentHistory.filter(a => a.rating > 0);
+
+  const averageRating =
+    ratedAppointments.length > 0
+      ? (
+        ratedAppointments.reduce((sum, item) => sum + item.rating, 0) /
+        ratedAppointments.length
+      ).toFixed(1)
+      : "0.0";
+
 
   const loyaltyPoints = 850;
   const nextRewardAt = 1000;
@@ -272,7 +389,7 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
                       {loyaltyPoints}
                     </Badge>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Progress to next reward</span>
@@ -306,7 +423,10 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
                     <span className="text-sm text-muted-foreground">Average Rating</span>
                     <div className="flex items-center space-x-1">
                       <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                      <span className="font-semibold text-foreground">4.8</span>
+                      <span className="font-semibold text-foreground">
+                        {averageRating}
+                      </span>
+
                     </div>
                   </div>
                 </div>
@@ -314,14 +434,14 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
                 <Separator className="my-6" />
 
                 <div className="space-y-3">
-                  <Button 
+                  <Button
                     onClick={() => setCurrentPage('booking')}
                     className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground border-0"
                   >
                     Book New Appointment
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => setIsEditing(!isEditing)}
                     className="w-full border-primary/20 hover:border-primary"
                   >
@@ -344,8 +464,8 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-semibold text-foreground">Personal Information</h3>
                     {!isEditing && (
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant="ghost"
                         onClick={() => setIsEditing(true)}
                       >
@@ -362,7 +482,7 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
                           <Input
                             id="firstName"
                             value={userInfo.firstName}
-                            onChange={(e) => setUserInfo({...userInfo, firstName: e.target.value})}
+                            onChange={(e) => setUserInfo({ ...userInfo, firstName: e.target.value })}
                             className="rounded-lg"
                           />
                         </div>
@@ -371,7 +491,7 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
                           <Input
                             id="lastName"
                             value={userInfo.lastName}
-                            onChange={(e) => setUserInfo({...userInfo, lastName: e.target.value})}
+                            onChange={(e) => setUserInfo({ ...userInfo, lastName: e.target.value })}
                             className="rounded-lg"
                           />
                         </div>
@@ -383,7 +503,7 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
                           id="email"
                           type="email"
                           value={userInfo.email}
-                          onChange={(e) => setUserInfo({...userInfo, email: e.target.value})}
+                          onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
                           className="rounded-lg"
                         />
                       </div>
@@ -394,7 +514,7 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
                           <Input
                             id="phone"
                             value={userInfo.phone}
-                            onChange={(e) => setUserInfo({...userInfo, phone: e.target.value})}
+                            onChange={(e) => setUserInfo({ ...userInfo, phone: e.target.value })}
                             className="rounded-lg"
                           />
                         </div>
@@ -404,7 +524,7 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
                             id="birthday"
                             type="date"
                             value={userInfo.birthday}
-                            onChange={(e) => setUserInfo({...userInfo, birthday: e.target.value})}
+                            onChange={(e) => setUserInfo({ ...userInfo, birthday: e.target.value })}
                             className="rounded-lg"
                           />
                         </div>
@@ -415,7 +535,7 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
                         <Input
                           id="address"
                           value={userInfo.address}
-                          onChange={(e) => setUserInfo({...userInfo, address: e.target.value})}
+                          onChange={(e) => setUserInfo({ ...userInfo, address: e.target.value })}
                           className="rounded-lg"
                         />
                       </div>
@@ -467,21 +587,54 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
               >
                 <Card className="p-6 bg-white/90 backdrop-blur-sm border-0 shadow-lg">
                   <h3 className="text-lg font-semibold text-foreground mb-6">Upcoming Appointments</h3>
-                  
+
                   {upcomingAppointments.length > 0 ? (
                     <div className="space-y-4">
                       {upcomingAppointments.map((appointment) => (
                         <div key={appointment.id} className="p-4 rounded-lg border border-primary/20 bg-gradient-to-r from-secondary/50 to-accent/30">
                           <div className="flex justify-between items-start mb-3">
-                            <div>
-                              <h4 className="font-semibold text-foreground">{appointment.service}</h4>
-                              <p className="text-sm text-muted-foreground">with {appointment.stylist}</p>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-medium text-foreground">
+                                  {appointment.bookingType === 'service'
+                                    ? appointment.service
+                                    : appointment.bookingType === 'package'
+                                      ? appointment.packageName
+                                      : 'General Appointment'}
+                                </h4>
+
+
+                                {/* ✅ SERVICE / PACKAGE BADGE */}
+                                <Badge
+                                  variant="outline"
+                                  className={`text-xs ${appointment.bookingType === 'package'
+                                    ? 'border-purple-300 text-purple-700'
+                                    : appointment.bookingType === 'service'
+                                      ? 'border-blue-300 text-blue-700'
+                                      : 'border-green-300 text-green-700'
+                                    }`}
+                                >
+                                  {appointment.bookingType === 'package'
+                                    ? 'Package'
+                                    : appointment.bookingType === 'service'
+                                      ? 'Service'
+                                      : 'Appointment'}
+                                </Badge>
+
+                              </div>
+
+                              <p className="text-sm text-muted-foreground">
+                                with {appointment.stylist}
+                              </p>
                             </div>
+
+                            {/* STATUS BADGE */}
                             <Badge className="bg-green-100 text-green-800 border-green-200">
                               {appointment.status}
                             </Badge>
                           </div>
-                          
+
+
                           <div className="flex items-center justify-between text-sm">
                             <div className="flex items-center space-x-4">
                               <div className="flex items-center space-x-1">
@@ -493,14 +646,18 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
                                 <span>{appointment.time}</span>
                               </div>
                             </div>
-                            <span className="font-semibold text-primary">${appointment.price}</span>
+                            <span className="font-semibold text-primary">
+                              {appointment.price > 0 ? `₹${appointment.price}` : 'Free'}
+                            </span>
+
                           </div>
 
                           <div className="flex gap-2 mt-4">
                             <Button size="sm" variant="outline" className="border-primary/20 hover:border-primary">
                               Reschedule
                             </Button>
-                            <Button size="sm" variant="outline" className="border-destructive/20 hover:border-destructive text-destructive">
+                            <Button size="sm" variant="outline" className="border-destructive/20 hover:border-destructive text-destructive"
+                              onClick={() => handleCancelBooking(appointment.id)}>
                               Cancel
                             </Button>
                           </div>
@@ -530,7 +687,7 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
                     <History className="w-5 h-5 mr-2" />
                     Appointment History
                   </h3>
-                  
+
                   <div className="space-y-3">
                     {appointmentHistory.map((appointment) => (
                       <div key={appointment.id} className="p-4 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors">
@@ -539,19 +696,41 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
                             <div className="flex justify-between items-center mb-2">
                               <h4 className="font-medium text-foreground">{appointment.service}</h4>
                               <div className="flex items-center space-x-1">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star
-                                    key={i}
-                                    className={`w-4 h-4 ${
-                                      i < appointment.rating
-                                        ? 'text-yellow-400 fill-current'
-                                        : 'text-gray-300'
-                                    }`}
-                                  />
-                                ))}
+                                {[1, 2, 3, 4, 5].map((star) => {
+                                  const isRated = !!appointment.rating;
+                                  const activeValue = isRated
+                                    ? appointment.rating
+                                    : hoveredRating;
+
+                                  return (
+                                    <Star
+                                      key={star}
+                                      onMouseEnter={() => {
+                                        if (!isRated) setHoveredRating(star);
+                                      }}
+                                      onMouseLeave={() => {
+                                        if (!isRated) setHoveredRating(null);
+                                      }}
+                                      onClick={() => {
+                                        if (!isRated) {
+                                          handleSubmitReview(appointment.id, star);
+                                        }
+                                      }}
+                                      className={`w-5 h-5 transition-all duration-200
+               ${star <= (activeValue || 0)
+                                          ? 'text-yellow-400 fill-current'
+                                          : 'text-gray-300'
+                                        }
+                 ${isRated ? 'cursor-default' : 'cursor-pointer hover:scale-110'}
+                                          `}
+                                    />
+                                  );
+                                })}
                               </div>
+
+
                             </div>
-                            
+
                             <div className="flex items-center justify-between text-sm text-muted-foreground">
                               <div className="flex items-center space-x-4">
                                 <span>with {appointment.stylist}</span>

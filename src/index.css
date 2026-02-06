@@ -158,6 +158,7 @@
   }
 }
 
+
 @layer base {
   *, :after, :before, ::backdrop {
     box-sizing: border-box;
@@ -3782,5 +3783,72 @@ html {
   to {
     opacity: var(--tw-exit-opacity, 1);
     transform: translate3d(var(--tw-exit-translate-x, 0), var(--tw-exit-translate-y, 0), 0) scale3d(var(--tw-exit-scale, 1), var(--tw-exit-scale, 1), var(--tw-exit-scale, 1)) rotate(var(--tw-exit-rotate, 0));
+  }
+}
+@layer utilities {
+  @keyframes modalEnter {
+    0% {
+      opacity: 0;
+      transform: scale(0.9) translateY(10px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  @keyframes modalExit {
+    0% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(0.9) translateY(10px);
+    }
+  }
+
+  @keyframes backdropEnter {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+
+  @keyframes backdropExit {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  .animate-modalEnter {
+    animation: modalEnter 0.25s ease-out forwards;
+  }
+
+  .animate-modalExit {
+    animation: modalExit 0.2s ease-in forwards;
+  }
+
+  .animate-backdropEnter {
+    animation: backdropEnter 0.2s ease-out forwards;
+  }
+
+  .animate-backdropExit {
+    animation: backdropExit 0.2s ease-in forwards;
+  }
+}
+
+
+@layer utilities {
+  @keyframes cardEnter {
+    0% {
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .animate-cardEnter {
+    animation: cardEnter 0.4s ease-out forwards;
   }
 }

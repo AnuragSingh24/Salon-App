@@ -9,6 +9,7 @@ import { Switch } from './ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Separator } from './ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { usePreferences } from '../context/PreferencesContext';
 
 interface SettingsPageProps {
   setCurrentPage: (page: string) => void;
@@ -35,18 +36,95 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
     appointmentReminders: true
   });
 
-  const [preferences, setPreferences] = useState({
-    theme: 'light',
-    currency: 'USD',
-    dateFormat: 'MM/DD/YYYY',
-    timeFormat: '12h'
+  // const [preferences, setPreferences] = useState({
+  //   theme: 'light',
+  //   currency: 'USD',
+  //   dateFormat: 'MM/DD/YYYY',
+  //   timeFormat: '12h'
+  // });
+
+  const { preferences, setPreferences } = usePreferences();
+
+
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
   });
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setUserRole('customer');
-    setCurrentPage('home');
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
+
+  const handleChangePassword = async () => {
+    setPasswordMessage(null);
+
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      setPasswordMessage("All fields are required");
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordMessage("New passwords do not match");
+      return;
+    }
+
+    try {
+      setPasswordLoading(true);
+
+      const token = localStorage.getItem("token");
+
+      const response = await fetch("api/auth/change-password", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Something went wrong");
+      }
+
+      setPasswordMessage("Password changed successfully ✅");
+
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      });
+
+      localStorage.removeItem("token");
+      setIsAuthenticated(false);
+      setCurrentPage("login");
+
+    } catch (error: any) {
+      setPasswordMessage(error.message);
+    } finally {
+      setPasswordLoading(false);
+    }
   };
+
+
+  const handleLogout = () => {
+    // 1. Remove auth data
+    localStorage.removeItem("token");
+    sessionStorage.removeItem("isLoggedIn");
+
+    // OR if you prefer explicit false
+    sessionStorage.setItem("isLoggedIn", "false");
+
+    // 2. Reset app state
+    setIsAuthenticated(false);
+    setUserRole("customer");
+    setCurrentPage("home");
+  };
+
 
   const handleSaveProfile = () => {
     // Save profile logic here
@@ -113,7 +191,7 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
                   <User className="w-5 h-5 text-primary" />
                   <h3 className="text-lg font-semibold">Profile Information</h3>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
@@ -121,7 +199,7 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
                       <Input
                         id="firstName"
                         value={profileData.firstName}
-                        onChange={(e) => setProfileData({...profileData, firstName: e.target.value})}
+                        onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
                       />
                     </div>
                     <div>
@@ -129,7 +207,7 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
                       <Input
                         id="lastName"
                         value={profileData.lastName}
-                        onChange={(e) => setProfileData({...profileData, lastName: e.target.value})}
+                        onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
                       />
                     </div>
                     <div>
@@ -138,7 +216,7 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
                         id="email"
                         type="email"
                         value={profileData.email}
-                        onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                        onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
                       />
                     </div>
                   </div>
@@ -148,14 +226,14 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
                       <Input
                         id="phone"
                         value={profileData.phone}
-                        onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+                        onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
                       />
                     </div>
                     <div>
                       <Label htmlFor="language">Language</Label>
-                      <Select 
-                        value={profileData.language} 
-                        onValueChange={(value) => setProfileData({...profileData, language: value})}
+                      <Select
+                        value={profileData.language}
+                        onValueChange={(value) => setProfileData({ ...profileData, language: value })}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -169,9 +247,9 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
                     </div>
                     <div>
                       <Label htmlFor="timezone">Timezone</Label>
-                      <Select 
-                        value={profileData.timezone} 
-                        onValueChange={(value) => setProfileData({...profileData, timezone: value})}
+                      <Select
+                        value={profileData.timezone}
+                        onValueChange={(value) => setProfileData({ ...profileData, timezone: value })}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -185,7 +263,7 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex justify-end mt-6">
                   <Button onClick={handleSaveProfile} className="bg-gradient-to-r from-primary to-accent text-primary-foreground">
                     <Save className="w-4 h-4 mr-2" />
@@ -202,7 +280,7 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
                   <Bell className="w-5 h-5 text-primary" />
                   <h3 className="text-lg font-semibold">Notification Preferences</h3>
                 </div>
-                
+
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -211,12 +289,12 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
                     </div>
                     <Switch
                       checked={notifications.emailNotifications}
-                      onCheckedChange={(checked) => setNotifications({...notifications, emailNotifications: checked})}
+                      onCheckedChange={(checked) => setNotifications({ ...notifications, emailNotifications: checked })}
                     />
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">SMS Notifications</p>
@@ -224,12 +302,12 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
                     </div>
                     <Switch
                       checked={notifications.smsNotifications}
-                      onCheckedChange={(checked) => setNotifications({...notifications, smsNotifications: checked})}
+                      onCheckedChange={(checked) => setNotifications({ ...notifications, smsNotifications: checked })}
                     />
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Push Notifications</p>
@@ -237,12 +315,12 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
                     </div>
                     <Switch
                       checked={notifications.pushNotifications}
-                      onCheckedChange={(checked) => setNotifications({...notifications, pushNotifications: checked})}
+                      onCheckedChange={(checked) => setNotifications({ ...notifications, pushNotifications: checked })}
                     />
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Marketing Emails</p>
@@ -250,12 +328,12 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
                     </div>
                     <Switch
                       checked={notifications.marketingEmails}
-                      onCheckedChange={(checked) => setNotifications({...notifications, marketingEmails: checked})}
+                      onCheckedChange={(checked) => setNotifications({ ...notifications, marketingEmails: checked })}
                     />
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Appointment Reminders</p>
@@ -263,11 +341,11 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
                     </div>
                     <Switch
                       checked={notifications.appointmentReminders}
-                      onCheckedChange={(checked) => setNotifications({...notifications, appointmentReminders: checked})}
+                      onCheckedChange={(checked) => setNotifications({ ...notifications, appointmentReminders: checked })}
                     />
                   </div>
                 </div>
-                
+
                 <div className="flex justify-end mt-6">
                   <Button onClick={handleSaveNotifications} className="bg-gradient-to-r from-primary to-accent text-primary-foreground">
                     <Save className="w-4 h-4 mr-2" />
@@ -284,25 +362,22 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
                   <Palette className="w-5 h-5 text-primary" />
                   <h3 className="text-lg font-semibold">Display Preferences</h3>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
                       <Label>Theme</Label>
-                      <Select value={preferences.theme} onValueChange={(value) => setPreferences({...preferences, theme: value})}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="light">Light</SelectItem>
-                          <SelectItem value="dark">Dark</SelectItem>
-                          <SelectItem value="auto">Auto</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Select
+                        value={preferences.theme}
+                        onValueChange={(value) =>
+                          setPreferences({ ...preferences, theme: value as any })
+                        }
+                      />
+
                     </div>
                     <div>
                       <Label>Currency</Label>
-                      <Select value={preferences.currency} onValueChange={(value) => setPreferences({...preferences, currency: value})}>
+                      <Select value={preferences.currency} onValueChange={(value) => setPreferences({ ...preferences, currency: value })}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -317,7 +392,7 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
                   <div className="space-y-4">
                     <div>
                       <Label>Date Format</Label>
-                      <Select value={preferences.dateFormat} onValueChange={(value) => setPreferences({...preferences, dateFormat: value})}>
+                      <Select value={preferences.dateFormat} onValueChange={(value) => setPreferences({ ...preferences, dateFormat: value })}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -330,7 +405,7 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
                     </div>
                     <div>
                       <Label>Time Format</Label>
-                      <Select value={preferences.timeFormat} onValueChange={(value) => setPreferences({...preferences, timeFormat: value})}>
+                      <Select value={preferences.timeFormat} onValueChange={(value) => setPreferences({ ...preferences, timeFormat: value })}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -342,7 +417,7 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex justify-end mt-6">
                   <Button onClick={handleSavePreferences} className="bg-gradient-to-r from-primary to-accent text-primary-foreground">
                     <Save className="w-4 h-4 mr-2" />
@@ -359,31 +434,57 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
                   <Shield className="w-5 h-5 text-primary" />
                   <h3 className="text-lg font-semibold">Security Settings</h3>
                 </div>
-                
+
                 <div className="space-y-6">
                   <div>
                     <h4 className="font-medium mb-4">Change Password</h4>
                     <div className="space-y-4 max-w-md">
                       <div>
                         <Label htmlFor="currentPassword">Current Password</Label>
-                        <Input id="currentPassword" type="password" />
+                        <Input
+                          type="password"
+                          value={passwordData.currentPassword}
+                          onChange={(e) =>
+                            setPasswordData({ ...passwordData, currentPassword: e.target.value })
+                          }
+                        />
                       </div>
                       <div>
                         <Label htmlFor="newPassword">New Password</Label>
-                        <Input id="newPassword" type="password" />
+                        <Input
+                          type="password"
+                          value={passwordData.newPassword}
+                          onChange={(e) =>
+                            setPasswordData({ ...passwordData, newPassword: e.target.value })
+                          }
+                        />
                       </div>
                       <div>
                         <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                        <Input id="confirmPassword" type="password" />
+                        <Input
+                          type="password"
+                          value={passwordData.confirmPassword}
+                          onChange={(e) =>
+                            setPasswordData({ ...passwordData, confirmPassword: e.target.value })
+                          }
+                        />
                       </div>
-                      <Button className="bg-gradient-to-r from-primary to-accent text-primary-foreground">
-                        Update Password
+                      {passwordMessage && (
+                        <p className="text-sm text-red-500">{passwordMessage}</p>
+                      )}
+
+                      <Button
+                        onClick={handleChangePassword}
+                        disabled={passwordLoading}
+                        className="bg-gradient-to-r from-primary to-accent text-primary-foreground"
+                      >
+                        {passwordLoading ? "Updating..." : "Update Password"}
                       </Button>
                     </div>
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div>
                     <h4 className="font-medium mb-4">Account Actions</h4>
                     <div className="space-y-4">
@@ -397,15 +498,15 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
                           Sign Out
                         </Button>
                       </div>
-                      
+
                       {userRole === 'admin' && (
                         <div className="flex items-center justify-between p-4 border rounded-lg border-destructive/20">
                           <div>
                             <p className="font-medium text-destructive">Admin Access</p>
                             <p className="text-sm text-muted-foreground">You currently have administrator privileges</p>
                           </div>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
                             onClick={() => {
                               setUserRole('customer');

@@ -1,4 +1,4 @@
-import React, { useState , useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Scissors, Palette, Sparkles, Clock, DollarSign, Star, ArrowRight } from 'lucide-react';
 import { Card } from './ui/card';
@@ -17,17 +17,17 @@ interface ServicesPageProps {
 type CategoryId = 'all' | 'hair' | 'spa' | 'nails' | 'makeup';
 
 interface Service {
-  id: number;
-  category: Exclude<CategoryId, 'all'>;
-  title: string;
+  _id: string;
+  category: string;
+  name: string;          // ✅ change from title to name
   description: string;
   price: number;
   duration: number;
-  popular: boolean;
-  rating: number;
-  // image is added client-side from static map
-  image?: string;
+  popular?: boolean;
+  rating?: number;
+  image: string;         // ✅ now required from backend
 }
+
 
 
 
@@ -137,78 +137,72 @@ export function ServicesPage({ setCurrentPage }: ServicesPageProps) {
   //   ? services 
   //   : services.filter(service => service.category === selectedCategory);
 
-   const [selectedCategory, setSelectedCategory] = useState<CategoryId>('all');
+  const [selectedCategory, setSelectedCategory] = useState<CategoryId>('all');
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   // Static image links (unchanged)
-  const imageMap: Record<number, string> = {
-    1: 'https://images.unsplash.com/photo-1712481846921-d5df6dc4abfd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYWlyJTIwc3R5bGluZyUyMHNhbG9uJTIwd29tYW58ZW58MXx8fHwxNzU4NTE5NDQ1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    2: 'https://images.unsplash.com/photo-1712213396688-c6f2d536671f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYWlyJTIwY29sb3JpbmclMjBzYWxvbnxlbnwxfHx8fDE3NTg0OTQwMjJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    3: 'https://images.unsplash.com/photo-1712213396688-c6f2d536671f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYWlyJTIwY29sb3JpbmclMjBzYWxvbnxlbnwxfHx8fDE3NTg0OTQwMjJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    4: 'https://images.unsplash.com/photo-1731514771613-991a02407132?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmYWNpYWwlMjBzcGElMjB0cmVhdG1lbnR8ZW58MXx8fHwxNzU4NDMxMjUwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    5: 'https://images.unsplash.com/photo-1737352777897-e22953991a32?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYXNzYWdlJTIwdGhlcmFweSUyMHNwYXxlbnwxfHx8fDE3NTg1MTY5ODR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    6: 'https://images.unsplash.com/photo-1554424518-336ec861b705?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzcGElMjByZWxheGF0aW9uJTIwd2VsbG5lc3N8ZW58MXx8fHwxNzU4NTE5NDQ4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    7: 'https://images.unsplash.com/photo-1758188753373-5b01a0fc6d9d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBzYWxvbiUyMGludGVyaW9yJTIwbW9kZXJufGVufDF8fHx8MTc1ODQzMzk4Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    8: 'https://images.unsplash.com/photo-1758188753373-5b01a0fc6d9d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBzYWxvbiUyMGludGVyaW9yJTIwbW9kZXJufGVufDF8fHx8MTc1ODQzMzk4Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-  };
+  // const imageMap: Record<string, string> = {
+  //   'Precision Haircut': 'https://images.unsplash.com/photo-1712481846921-d5df6dc4abfd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYWlyJTIwc3R5bGluZyUyMHNhbG9uJTIwd29tYW58ZW58MXx8fHwxNzU4NTE5NDQ1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+  //   'Color Transformation': 'https://images.unsplash.com/photo-1712213396688-c6f2d536671f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYWlyJTIwY29sb3JpbmclMjBzYWxvbnxlbnwxfHx8fDE3NTg0OTQwMjJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+  //   'Balayage Highlights': 'https://images.unsplash.com/photo-1712213396688-c6f2d536671f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYWlyJTIwY29sb3JpbmclMjBzYWxvbnxlbnwxfHx8fDE3NTg0OTQwMjJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+  //   'Signature Facial': 'https://images.unsplash.com/photo-1731514771613-991a02407132?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmYWNpYWwlMjBzcGElMjB0cmVhdG1lbnR8ZW58MXx8fHwxNzU4NDMxMjUwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+  //   'Relaxation Massage': 'https://images.unsplash.com/photo-1737352777897-e22953991a32?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYXNzYWdlJTIwdGhlcmFweSUyMHNwYXxlbnwxfHx8fDE3NTg1MTY5ODR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+  //   'Luxury Manicure': 'https://images.unsplash.com/photo-1554424518-336ec861b705?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzcGElMjByZWxheGF0aW9uJTIwd2VsbG5lc3N8ZW58MXx8fHwxNzU4NTE5NDQ4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+  //   'Bridal Makeup': 'https://images.unsplash.com/photo-1758188753373-5b01a0fc6d9d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBzYWxvbiUyMGludGVyaW9yJTIwbW9kZXJufGVufDF8fHx8MTc1ODQzMzk4Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+  //   'Event Makeup': 'https://images.unsplash.com/photo-1758188753373-5b01a0fc6d9d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBzYWxvbiUyMGludGVyaW9yJTIwbW9kZXJufGVufDF8fHx8MTc1ODQzMzk4Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+  // };
 
   const categories = [
-    { id: 'all',   label: 'All Services' },
-    { id: 'Hair',  label: 'Hair Services' },
-    { id: 'Spa',   label: 'Spa & Wellness' },
+    { id: 'all', label: 'All Services' },
+    { id: 'Hair', label: 'Hair Services' },
+    { id: 'Spa', label: 'Spa & Wellness' },
     { id: 'Nails', label: 'Nail Care' },
-    { id: 'Makeup',label: 'Makeup' },
+    { id: 'Makeup', label: 'Makeup' },
   ] as const;
 
 
 
   useEffect(() => {
     const controller = new AbortController();
+
     const fetchServices = async () => {
       setLoading(true);
       setError(null);
+
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setError('Not authenticated');
-          setLoading(false);
-          return;
+        const token = localStorage.getItem("token");
+
+        const param =
+          selectedCategory === "all"
+            ? ""
+            : `?category=${selectedCategory.toLowerCase()}`;
+
+        const res = await fetch(`/api/services${param}`, {
+          signal: controller.signal,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch services");
         }
-       
- 
-      const param = selectedCategory === 'all' ? '' : `?category=${selectedCategory.toLowerCase()}`;
-      const res = await fetch(`/api/services${param}`, {
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, // ⬅️ token attached
-        },
-      });
 
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`Failed: ${res.status} ${text}`);
-      }
+        const data: Service[] = await res.json();
+        setServices(data);   // ✅ direct from backend
 
-      const data: Service[] = await res.json();
-
-
-        // Attach static image links here:
-        const withImages = data.map(s => ({
-          ...s,
-          image: imageMap[s.id] ?? 'https://via.placeholder.com/800x600?text=Service',
-        }));
-        setServices(withImages);
       } catch (err: any) {
-        if (err.name !== 'AbortError') {
-          setError(err.message || 'Something went wrong.');
+        if (err.name !== "AbortError") {
+          setError(err.message);
         }
       } finally {
         setLoading(false);
       }
     };
+
     fetchServices();
     return () => controller.abort();
   }, [selectedCategory]);
@@ -221,7 +215,7 @@ export function ServicesPage({ setCurrentPage }: ServicesPageProps) {
       {/* Hero Section */}
       <section className="py-24 bg-gradient-to-r from-primary/5 to-accent/10">
         <div className="container mx-auto px-4">
-          <motion.div 
+          <motion.div
             className="text-center space-y-6 max-w-3xl mx-auto"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -232,7 +226,7 @@ export function ServicesPage({ setCurrentPage }: ServicesPageProps) {
               Our Services
             </h1>
             <p className="text-lg text-muted-foreground">
-              Experience our comprehensive range of beauty and wellness services, 
+              Experience our comprehensive range of beauty and wellness services,
               delivered by expert professionals using premium products.
             </p>
           </motion.div>
@@ -242,7 +236,7 @@ export function ServicesPage({ setCurrentPage }: ServicesPageProps) {
       {/* Category Filter */}
       <section className="py-12 bg-white/50 backdrop-blur-sm border-y border-primary/10">
         <div className="container mx-auto px-4">
-          <motion.div 
+          <motion.div
             className="flex flex-wrap justify-center gap-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -253,11 +247,10 @@ export function ServicesPage({ setCurrentPage }: ServicesPageProps) {
                 key={category.id}
                 variant={selectedCategory === category.id ? "default" : "outline"}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`rounded-full px-6 py-2 transition-all duration-300 ${
-                  selectedCategory === category.id 
-                    ? 'bg-gradient-to-r from-primary to-accent text-primary-foreground border-0' 
-                    : 'border-primary/20 hover:border-primary hover:bg-primary/5'
-                }`}
+                className={`rounded-full px-6 py-2 transition-all duration-300 ${selectedCategory === category.id
+                  ? 'bg-gradient-to-r from-primary to-accent text-primary-foreground border-0'
+                  : 'border-primary/20 hover:border-primary hover:bg-primary/5'
+                  }`}
               >
                 {category.label}
               </Button>
@@ -269,13 +262,13 @@ export function ServicesPage({ setCurrentPage }: ServicesPageProps) {
       {/* Services Grid */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <motion.div 
+          <motion.div
             className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
             layout
           >
             {services.map((service, index) => (
               <motion.div
-                key={service.id}
+                key={service._id}
                 layout
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -288,11 +281,11 @@ export function ServicesPage({ setCurrentPage }: ServicesPageProps) {
                   <div className="relative h-64 overflow-hidden">
                     <ImageWithFallback
                       src={service.image}
-                      alt={service.title}
+                      alt={service.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                    
+
                     {/* Badges */}
                     <div className="absolute top-4 left-4 flex gap-2">
                       {service.popular && (
@@ -318,7 +311,7 @@ export function ServicesPage({ setCurrentPage }: ServicesPageProps) {
                   <div className="p-6 space-y-4">
                     <div className="space-y-2">
                       <h3 className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
-                        {service.title}
+                        {service.name}
                       </h3>
                       <p className="text-muted-foreground text-sm leading-relaxed">
                         {service.description}
@@ -336,23 +329,39 @@ export function ServicesPage({ setCurrentPage }: ServicesPageProps) {
                           <span>${service.price}</span>
                         </div>
                       </div>
-                      
+
                       <Button
                         size="sm"
                         onClick={() => {
-                       const isLoggedIn = JSON.parse(sessionStorage.getItem('isLoggedIn') ?? 'false') as boolean;
-                      if (isLoggedIn) {
-                          setCurrentPage('booking');
-                         } else {
-                         setCurrentPage('auth');
-                       }
+                          // 🔐 Save selected service to sessionStorage
+                          sessionStorage.setItem(
+                            'selectedBooking',
+                            JSON.stringify({
+                              bookingType: 'service',
+                              serviceId: service._id,
+                              name: service.name,
+                              price: service.price,
+                              duration: service.duration
+                            })
+                          );
 
+
+                          const isLoggedIn = JSON.parse(
+                            sessionStorage.getItem('isLoggedIn') ?? 'false'
+                          );
+
+                          if (isLoggedIn) {
+                            setCurrentPage('booking');
+                          } else {
+                            setCurrentPage('auth');
+                          }
                         }}
                         className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 group-hover:scale-105 transition-transform"
                       >
                         Book Now
                         <ArrowRight className="ml-2 w-4 h-4" />
                       </Button>
+
                     </div>
                   </div>
                 </Card>
@@ -365,7 +374,7 @@ export function ServicesPage({ setCurrentPage }: ServicesPageProps) {
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-secondary to-accent">
         <div className="container mx-auto px-4">
-          <motion.div 
+          <motion.div
             className="text-center space-y-6 max-w-2xl mx-auto"
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -376,18 +385,18 @@ export function ServicesPage({ setCurrentPage }: ServicesPageProps) {
               Ready to Book Your Service?
             </h2>
             <p className="text-muted-foreground">
-              Our expert team is ready to provide you with exceptional service. 
+              Our expert team is ready to provide you with exceptional service.
               Book your appointment today and experience the luxury you deserve.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
+              <Button
                 size="lg"
                 onClick={() => setCurrentPage('booking')}
                 className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 px-8 py-6"
               >
                 Book Appointment
               </Button>
-              <Button 
+              <Button
                 size="lg"
                 variant="outline"
                 onClick={() => setCurrentPage('packages')}

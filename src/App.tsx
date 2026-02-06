@@ -59,6 +59,9 @@ export default function App() {
   const [userRole, setUserRole] = useState('customer'); // 'customer' or 'admin'
   const [isLoading, setIsLoading] = useState(true);
   
+   
+
+
    useEffect(() => {
     const token = localStorage.getItem("token");      // JWT
     const isLogged = sessionStorage.getItem("isLoggedIn");

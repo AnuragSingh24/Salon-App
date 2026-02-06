@@ -21,7 +21,10 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
     subject: '',
     message: ''
   });
-  
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState('');
+  const [error, setError] = useState('');
+
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -47,8 +50,8 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
     {
       icon: MapPin,
       title: 'Visit Us',
-      details: ['123 Beauty Boulevard', 'Salon District, City 12345'],
-      action: 'https://maps.google.com'
+      details: ['505/74, Mariswamy Building, 1st Cross, 25th Main Rd, 1st Sector, HSR Layout, Bengaluru, Karnataka 560102'],
+      action: ' https://maps.app.goo.gl/Av2vkDTHsmQGAZPs9?g_st=iw'
     },
     {
       icon: Clock,
@@ -64,28 +67,50 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
     { icon: MessageCircle, name: 'WhatsApp', url: '#', followers: 'Chat Now' }
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle form submission
-    console.log('Form submitted:', formData);
-  };
-
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setSuccess('');
+    setError('');
+
+    try {
+      const response = await fetch('/api/mail/send-mail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess('Your message has been sent successfully!');
+        setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+      } else {
+        setError(data.error || 'Something went wrong. Please try again.');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-white via-secondary/30 to-accent/20">
       {/* Hero Section */}
-      <motion.section 
+      <motion.section
         className="relative min-h-screen flex items-center justify-center bg-gradient-to-r from-primary/5 to-accent/10 overflow-hidden"
         style={{ y: heroY, opacity: heroOpacity }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/5" />
-        
+
         <div className="container mx-auto px-4 z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <motion.div 
+            <motion.div
               className="space-y-8"
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -101,7 +126,7 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
                 <span className="text-sm font-medium text-foreground">Get in Touch</span>
               </motion.div>
 
-              <motion.h1 
+              <motion.h1
                 className="text-4xl md:text-6xl lg:text-7xl font-light text-foreground leading-tight"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -110,14 +135,14 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
                 Let's
                 <span className="block text-primary italic">Connect</span>
               </motion.h1>
-              
-              <motion.p 
+
+              <motion.p
                 className="text-lg md:text-xl text-muted-foreground max-w-lg leading-relaxed"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
               >
-                Have questions about our services? Want to schedule a consultation? 
+                Have questions about our services? Want to schedule a consultation?
                 We're here to help you start your beauty journey with us.
               </motion.p>
 
@@ -127,13 +152,13 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8 }}
               >
-                <Button 
+                <Button
                   onClick={() => setCurrentPage('booking')}
                   className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 px-8 py-6 text-lg"
                 >
                   Book Appointment
                 </Button>
-                <Button 
+                <Button
                   variant="outline"
                   onClick={() => document.getElementById('contact-form')?.scrollIntoView({ behavior: 'smooth' })}
                   className="px-8 py-6 text-lg border-primary/20 hover:border-primary"
@@ -143,7 +168,7 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
               </motion.div>
 
               {/* Quick Contact */}
-              <motion.div 
+              <motion.div
                 className="flex items-center space-x-6 pt-4"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -160,7 +185,7 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
               </motion.div>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               className="relative"
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -174,9 +199,9 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
               </div>
-              
+
               {/* Floating Info Card */}
-              <motion.div 
+              <motion.div
                 className="absolute -bottom-8 -left-8 bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-primary/10"
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -188,7 +213,7 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
                   </div>
                   <div>
                     <p className="font-semibold text-foreground">Visit Our Salon</p>
-                    <p className="text-sm text-muted-foreground">123 Beauty Boulevard</p>
+                    <p className="text-sm text-muted-foreground">505/74, Mariswamy Building, 1st Cross, 25th Main Rd, 1st Sector, HSR Layout, Bengaluru, Karnataka 560102</p>
                   </div>
                 </div>
               </motion.div>
@@ -200,7 +225,7 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
       {/* Contact Information */}
       <section className="py-20 bg-white/50 backdrop-blur-sm">
         <div className="container mx-auto px-4">
-          <motion.div 
+          <motion.div
             className="text-center space-y-6 mb-16"
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -211,7 +236,7 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
               Multiple Ways to Reach Us
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Choose the most convenient way to get in touch. We're available through 
+              Choose the most convenient way to get in touch. We're available through
               multiple channels to ensure you can reach us when you need us.
             </p>
           </motion.div>
@@ -240,14 +265,14 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
                       ))}
                     </div>
                     {info.action && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
+                      <Button
+                        variant="outline"
+                        size="sm"
                         className="mt-4 border-primary/20 hover:border-primary"
                         onClick={() => window.open(info.action)}
                       >
-                        {info.title === 'Call Us' ? 'Call Now' : 
-                         info.title === 'Email' ? 'Send Email' : 'Get Directions'}
+                        {info.title === 'Call Us' ? 'Call Now' :
+                          info.title === 'Email' ? 'Send Email' : 'Get Directions'}
                       </Button>
                     )}
                   </Card>
@@ -262,7 +287,7 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
       <section id="contact-form" className="py-20">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <motion.div 
+            <motion.div
               className="text-center space-y-6 mb-12"
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -273,7 +298,7 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
                 Send Us a Message
               </h2>
               <p className="text-lg text-muted-foreground">
-                Have specific questions or special requests? Fill out the form below 
+                Have specific questions or special requests? Fill out the form below
                 and we'll get back to you within 24 hours.
               </p>
             </motion.div>
@@ -330,12 +355,12 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
                           <SelectValue placeholder="Select a subject" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="booking">Booking Inquiry</SelectItem>
-                          <SelectItem value="services">Service Questions</SelectItem>
-                          <SelectItem value="packages">Package Information</SelectItem>
-                          <SelectItem value="consultation">Consultation Request</SelectItem>
-                          <SelectItem value="complaint">Feedback/Complaint</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
+                          <SelectItem value="Booking Inquiry">Booking Inquiry</SelectItem>
+                          <SelectItem value="Service Questions">Service Questions</SelectItem>
+                          <SelectItem value="Package Information">Package Information</SelectItem>
+                          <SelectItem value="Consultation Request">Consultation Request</SelectItem>
+                          <SelectItem value="Feedback/Complaint">Feedback/Complaint</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -353,15 +378,18 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
                     />
                   </div>
 
+                  {success && <p className="text-green-600 font-medium">{success}</p>}
+                  {error && <p className="text-red-600 font-medium">{error}</p>}
+
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Button 
+                    <Button
                       type="submit"
+                      disabled={loading}
                       className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 px-8 py-3"
                     >
-                      <Send className="w-4 h-4 mr-2" />
-                      Send Message
+                      {loading ? 'Sending...' : <><Send className="w-4 h-4 mr-2" />Send Message</>}
                     </Button>
-                    <Button 
+                    <Button
                       type="button"
                       variant="outline"
                       onClick={() => setCurrentPage('booking')}
@@ -382,7 +410,7 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Social Media */}
-            <motion.div 
+            <motion.div
               className="space-y-8"
               initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -392,7 +420,7 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
               <div className="space-y-4">
                 <h3 className="text-2xl font-semibold text-foreground">Follow Our Journey</h3>
                 <p className="text-muted-foreground">
-                  Stay connected with us on social media for the latest updates, 
+                  Stay connected with us on social media for the latest updates,
                   beauty tips, and stunning transformations.
                 </p>
               </div>
@@ -428,7 +456,7 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
             </motion.div>
 
             {/* Map Placeholder */}
-            <motion.div 
+            <motion.div
               className="space-y-6"
               initial={{ opacity: 0, x: 50 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -438,7 +466,7 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
               <div className="space-y-4">
                 <h3 className="text-2xl font-semibold text-foreground">Find Us</h3>
                 <p className="text-muted-foreground">
-                  Located in the heart of the beauty district, our salon is easily 
+                  Located in the heart of the beauty district, our salon is easily
                   accessible with ample parking available.
                 </p>
               </div>
@@ -449,15 +477,21 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
                     <MapPin className="w-12 h-12 mx-auto text-primary" />
                     <div>
                       <h4 className="font-semibold text-foreground">MK Salon</h4>
-                      <p className="text-sm text-muted-foreground">123 Beauty Boulevard</p>
-                      <p className="text-sm text-muted-foreground">Salon District, City 12345</p>
+                      <p className="text-sm text-muted-foreground">505/74, Mariswamy Building, 1st Cross, 25th Main Rd, 1st Sector</p>
+                      <p className="text-sm text-muted-foreground">HSR Layout, Bengaluru</p>
                     </div>
-                    <Button 
-                      variant="outline"
-                      className="border-primary/20 hover:border-primary"
+                    <a
+                      href=" https://maps.app.goo.gl/Av2vkDTHsmQGAZPs9?g_st=iw"
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
-                      Get Directions
-                    </Button>
+                      <Button
+                        variant="outline"
+                        className="border-primary/20 hover:border-primary"
+                      >
+                        Get Directions
+                      </Button>
+                    </a>
                   </div>
                 </div>
               </Card>

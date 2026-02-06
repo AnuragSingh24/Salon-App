@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'motion/react';
 import { Star, Heart, Quote, ThumbsUp, Filter, Calendar, User, MessageCircle } from 'lucide-react';
 import { Button } from './ui/button';
@@ -8,14 +8,96 @@ import { Avatar } from './ui/avatar';
 import { Progress } from './ui/progress';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
+import { ReviewModal } from './ReviewModal';
+import { BookingsList } from './BookingList';
+
+export interface Booking {
+  id: string;
+  serviceName: string;
+  stylistName: string;
+  date: string;
+  time: string;
+  hasReview: boolean;
+  price: string;
+}
+
 interface ReviewsPageProps {
   setCurrentPage: (page: string) => void;
 }
 
+interface Review {
+  _id: string;
+  userId: {
+    firstname: string;
+    lastname: string;
+  };
+  serviceId?: {
+    name: string;
+  };
+  stylistId?: {
+    name: string;
+  };
+  rating: number;
+  comment?: string;
+  createdAt: string;
+  likes?: number;
+}
+
+
+
+
 export function ReviewsPage({ setCurrentPage }: ReviewsPageProps) {
-  const [selectedRating, setSelectedRating] = useState('all');
-  const [selectedService, setSelectedService] = useState('all');
-  
+  const [reviews, setReviews] = useState<Review[]>([]);
+const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [selectedRating, setSelectedRating] = useState("all");
+  const [selectedService, setSelectedService] = useState("all");
+
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBookingsModalOpen, setIsBookingsModalOpen] = useState(false);
+
+  // ✅ Fetch bookings from backend
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await fetch(
+          "api/bookings/pending-reviews",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch bookings");
+        }
+
+        const data = await res.json();
+
+        if (Array.isArray(data)) {
+          setBookings(data);
+        } else if (Array.isArray(data.bookings)) {
+          setBookings(data.bookings);
+        } else {
+          setBookings([]);
+        }
+
+
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, []);
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -25,17 +107,47 @@ export function ReviewsPage({ setCurrentPage }: ReviewsPageProps) {
   const heroY = useTransform(scrollYProgress, [0, 1], [0, -50]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0.3]);
 
-  const ratingStats = {
-    average: 4.9,
-    total: 1247,
+  const [ratingStats, setRatingStats] = useState({
+    average: 0,
+    total: 0,
     breakdown: {
-      5: 89,
-      4: 8,
-      3: 2,
-      2: 1,
+      5: 0,
+      4: 0,
+      3: 0,
+      2: 0,
       1: 0
     }
-  };
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch("/api/reviews/stats");
+        if (!res.ok) throw new Error("Failed to fetch stats");
+
+        const data = await res.json();
+
+        setRatingStats({
+          average: data.averageRating || 0,
+          total: data.totalReviews || 0,
+          breakdown: data.breakdown || {
+            5: 0,
+            4: 0,
+            3: 0,
+            2: 0,
+            1: 0
+          }
+        });
+
+      } catch (err) {
+        console.error("Error fetching rating stats:", err);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+
 
   const services = [
     { id: 'all', label: 'All Services' },
@@ -45,96 +157,67 @@ export function ReviewsPage({ setCurrentPage }: ReviewsPageProps) {
     { id: 'bridal', label: 'Bridal Services' }
   ];
 
-  const reviews = [
-    {
-      id: 1,
-      name: 'Sarah Johnson',
-      rating: 5,
-      service: 'Balayage Highlights',
-      stylist: 'Emma Rodriguez',
-      date: '2024-01-10',
-      text: "Absolutely incredible transformation! Emma understood exactly what I wanted and delivered beyond my expectations. The balayage looks so natural and has grown out beautifully. The whole experience was relaxing and professional. I've already booked my next appointment!",
-      image: 'https://images.unsplash.com/photo-1642337707259-0fdcc8fd06f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYXBweSUyMGN1c3RvbWVyJTIwc2Fsb24lMjB0ZXN0aW1vbmlhbHxlbnwxfHx8fDE3NTg1MjE3MzR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      verified: true,
-      helpful: 24
-    },
-    {
-      id: 2,
-      name: 'Maria Garcia',
-      rating: 5,
-      service: 'Bridal Package',
-      stylist: 'Maria Santos',
-      date: '2024-01-08',
-      text: "My wedding day hair and makeup were absolutely perfect! Maria was so calm and professional, which helped ease my nerves. The trial run was thorough and the final look lasted all day and night. All my bridesmaids looked stunning too. Worth every penny!",
-      image: 'https://images.unsplash.com/photo-1642337707259-0fdcc8fd06f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYXBweSUyMGN1c3RvbWVyJTIwc2Fsb24lMjB0ZXN0aW1vbmlhbHxlbnwxfHx8fDE3NTg1MjE3MzR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      verified: true,
-      helpful: 31
-    },
-    {
-      id: 3,
-      name: 'Amanda Chen',
-      rating: 5,
-      service: 'Precision Cut',
-      stylist: 'Sarah Chen',
-      date: '2024-01-05',
-      text: "After years of disappointing haircuts elsewhere, I finally found my forever stylist! Sarah has an incredible eye for what works with your face shape and lifestyle. My cut grows out beautifully and always looks put-together. The consultation was thorough and educational.",
-      image: 'https://images.unsplash.com/photo-1642337707259-0fdcc8fd06f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYXBweSUyMGN1c3RvbWVyJTIwc2Fsb24lMjB0ZXN0aW1vbmlhbHxlbnwxfHx8fDE3NTg1MjE3MzR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      verified: true,
-      helpful: 18
-    },
-    {
-      id: 4,
-      name: 'Jessica Williams',
-      rating: 5,
-      service: 'Color Transformation',
-      stylist: 'Alex Thompson',
-      date: '2024-01-03',
-      text: "Alex is a color genius! I wanted to go from dark brown to a warm caramel and was nervous about the process. They explained every step, showed me examples, and the result is exactly what I dreamed of. The color correction was flawless and my hair feels healthy and vibrant.",
-      image: 'https://images.unsplash.com/photo-1642337707259-0fdcc8fd06f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYXBweSUyMGN1c3RvbWVyJTIwc2Fsb24lMjB0ZXN0aW1vbmlhbHxlbnwxfHx8fDE3NTg1MjE3MzR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      verified: true,
-      helpful: 27
-    },
-    {
-      id: 5,
-      name: 'Rachel Thompson',
-      rating: 5,
-      service: 'Spa Facial',
-      stylist: 'Maria Santos',
-      date: '2023-12-28',
-      text: "The most relaxing and rejuvenating facial I've ever had! Maria's technique is amazing and she really customized the treatment for my skin concerns. My skin has been glowing for weeks. The atmosphere is so peaceful and the products smell incredible. Pure luxury!",
-      image: 'https://images.unsplash.com/photo-1642337707259-0fdcc8fd06f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYXBweSUyMGN1c3RvbWVyJTIwc2Fsb24lMjB0ZXN0aW1vbmlhbHxlbnwxfHx8fDE3NTg1MjE3MzR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      verified: true,
-      helpful: 22
-    },
-    {
-      id: 6,
-      name: 'Emily Rodriguez',
-      rating: 4,
-      service: 'Luxury Manicure',
-      stylist: 'Emma Rodriguez',
-      date: '2023-12-25',
-      text: "Beautiful manicure that lasted two weeks without chipping! Emma was detail-oriented and the nail art was exactly what I asked for. The only minor issue was the wait time, but the quality made up for it. Will definitely be back for special occasions.",
-      image: 'https://images.unsplash.com/photo-1642337707259-0fdcc8fd06f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYXBweSUyMGN1c3RvbWVyJTIwc2Fsb24lMjB0ZXN0aW1vbmlhbHxlbnwxfHx8fDE3NTg1MjE3MzR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      verified: true,
-      helpful: 15
-    }
-  ];
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const res = await fetch("/api/reviews/all");
+
+        if (!res.ok) throw new Error("Failed to fetch reviews");
+
+        const data = await res.json();
+        setReviews(data);
+
+      } catch (err) {
+        console.error("Error fetching reviews:", err);
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+
+    fetchReviews();
+  }, []);
+
 
   const getStarColor = (rating: number, starIndex: number) => {
     return starIndex < rating ? 'text-yellow-400 fill-current' : 'text-gray-300';
   };
 
+  const handleSelectBooking = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedBooking(null);
+  };
+
+  const handleReviewSubmit = () => {
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === selectedBooking?.id
+          ? { ...b, hasReview: true }
+          : b
+      )
+    );
+
+    setSelectedBooking(null);
+    setIsModalOpen(false);
+  };
+
+
+
   return (
     <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-white via-secondary/30 to-accent/20">
       {/* Hero Section */}
-      <motion.section 
+      <motion.section
         className="relative min-h-screen flex items-center justify-center bg-gradient-to-r from-primary/5 to-accent/10 overflow-hidden"
         style={{ y: heroY, opacity: heroOpacity }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/5" />
-        
+
         <div className="container mx-auto px-4 z-10">
-          <motion.div 
+          <motion.div
             className="text-center space-y-8 max-w-4xl mx-auto"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -150,7 +233,7 @@ export function ReviewsPage({ setCurrentPage }: ReviewsPageProps) {
               <span className="text-sm font-medium text-foreground">{ratingStats.average} • {ratingStats.total} Reviews</span>
             </motion.div>
 
-            <motion.h1 
+            <motion.h1
               className="text-4xl md:text-6xl lg:text-7xl font-light text-foreground leading-tight"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -159,14 +242,14 @@ export function ReviewsPage({ setCurrentPage }: ReviewsPageProps) {
               Stories of
               <span className="block text-primary italic">Transformation</span>
             </motion.h1>
-            
-            <motion.p 
+
+            <motion.p
               className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
             >
-              Real experiences from real people. Discover why our clients trust us with their beauty journey 
+              Real experiences from real people. Discover why our clients trust us with their beauty journey
               and become part of our growing family of satisfied customers.
             </motion.p>
 
@@ -217,7 +300,7 @@ export function ReviewsPage({ setCurrentPage }: ReviewsPageProps) {
       {/* Rating Overview */}
       <section className="py-16 bg-white/50 backdrop-blur-sm">
         <div className="container mx-auto px-4">
-          <motion.div 
+          <motion.div
             className="max-w-4xl mx-auto"
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -267,7 +350,7 @@ export function ReviewsPage({ setCurrentPage }: ReviewsPageProps) {
       {/* Reviews Section */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <motion.div 
+          <motion.div
             className="text-center space-y-6 mb-12"
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -283,7 +366,7 @@ export function ReviewsPage({ setCurrentPage }: ReviewsPageProps) {
           </motion.div>
 
           {/* Filter Options */}
-          <motion.div 
+          <motion.div
             className="flex flex-wrap justify-center gap-3 mb-12"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -295,11 +378,10 @@ export function ReviewsPage({ setCurrentPage }: ReviewsPageProps) {
                 key={service.id}
                 variant={selectedService === service.id ? "default" : "outline"}
                 onClick={() => setSelectedService(service.id)}
-                className={`rounded-full px-6 py-2 transition-all duration-300 ${
-                  selectedService === service.id 
-                    ? 'bg-gradient-to-r from-primary to-accent text-primary-foreground border-0' 
-                    : 'border-primary/20 hover:border-primary hover:bg-primary/5'
-                }`}
+                className={`rounded-full px-6 py-2 transition-all duration-300 ${selectedService === service.id
+                  ? 'bg-gradient-to-r from-primary to-accent text-primary-foreground border-0'
+                  : 'border-primary/20 hover:border-primary hover:bg-primary/5'
+                  }`}
               >
                 {service.label}
               </Button>
@@ -307,22 +389,22 @@ export function ReviewsPage({ setCurrentPage }: ReviewsPageProps) {
           </motion.div>
 
           {/* Reviews Grid */}
-          <motion.div 
+          <motion.div
             className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
             layout
           >
             {reviews.map((review, index) => (
               <motion.div
-                key={review.id}
+                key={review._id}
                 layout
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -50 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
+                transition={{ duration: 0.6, delay: index * 0.05 }}
                 whileHover={{ y: -5, scale: 1.02 }}
                 className="group"
               >
                 <Card className="p-6 h-full border-0 shadow-lg group-hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm">
+
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center space-x-3">
@@ -330,68 +412,69 @@ export function ReviewsPage({ setCurrentPage }: ReviewsPageProps) {
                         <User className="w-6 h-6 text-primary-foreground" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-foreground">{review.name}</h3>
+                        <h3 className="font-semibold text-foreground">
+                          {review.userId?.firstname} {review.userId?.lastname}
+                        </h3>
+
                         <div className="flex items-center space-x-1">
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`w-4 h-4 ${getStarColor(review.rating, i)}`}
+                              className={`w-4 h-4 ${i < review.rating
+                                  ? "text-yellow-400 fill-current"
+                                  : "text-gray-300"
+                                }`}
                             />
                           ))}
                         </div>
                       </div>
                     </div>
-                    {review.verified && (
-                      <Badge className="bg-green-100 text-green-800 border-green-200">
-                        Verified
-                      </Badge>
-                    )}
                   </div>
 
                   {/* Service Info */}
                   <div className="mb-4 p-3 rounded-lg bg-secondary/30">
                     <div className="text-sm text-muted-foreground">Service</div>
-                    <div className="font-medium text-foreground">{review.service}</div>
-                    <div className="text-sm text-muted-foreground">with {review.stylist}</div>
+                    <div className="font-medium text-foreground">
+                      {review.serviceId?.name || "Service"}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      with {review.stylistId?.name || "Stylist"}
+                    </div>
                   </div>
 
                   {/* Review Text */}
                   <div className="mb-4">
                     <Quote className="w-6 h-6 text-primary/30 mb-2" />
                     <p className="text-muted-foreground leading-relaxed text-sm">
-                      {review.text}
+                      {review.comment || "No comment provided."}
                     </p>
                   </div>
 
                   {/* Footer */}
                   <div className="flex items-center justify-between text-sm text-muted-foreground pt-4 border-t border-border">
-                    <div className="flex items-center space-x-1">
-                      <Calendar className="w-4 h-4" />
-                      <span>{new Date(review.date).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        year: 'numeric' 
-                      })}</span>
+                    <div>
+                      {new Date(review.createdAt).toLocaleDateString()}
                     </div>
                     <div className="flex items-center space-x-1">
                       <ThumbsUp className="w-4 h-4" />
-                      <span>{review.helpful}</span>
+                      <span>{review.likes || 0}</span>
                     </div>
                   </div>
                 </Card>
               </motion.div>
             ))}
+
           </motion.div>
 
           {/* Load More */}
-          <motion.div 
+          <motion.div
             className="text-center mt-12"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <Button 
+            <Button
               variant="outline"
               className="px-8 py-4 border-primary/20 hover:border-primary hover:bg-primary/5"
             >
@@ -405,7 +488,7 @@ export function ReviewsPage({ setCurrentPage }: ReviewsPageProps) {
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-secondary to-accent">
         <div className="container mx-auto px-4">
-          <motion.div 
+          <motion.div
             className="text-center space-y-6 max-w-2xl mx-auto"
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -416,29 +499,90 @@ export function ReviewsPage({ setCurrentPage }: ReviewsPageProps) {
               Join Our Family of Happy Clients
             </h2>
             <p className="text-muted-foreground">
-              Experience the same exceptional service that has earned us thousands of five-star reviews. 
+              Experience the same exceptional service that has earned us thousands of five-star reviews.
               Your transformation story starts here.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
+              <Button
                 size="lg"
                 onClick={() => setCurrentPage('booking')}
                 className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 px-8 py-6"
               >
                 Book Your Experience
               </Button>
-              <Button 
+              <Button
                 size="lg"
                 variant="outline"
-                onClick={() => setCurrentPage('contact')}
+                onClick={() => setIsBookingsModalOpen(true)}
                 className="px-8 py-6 border-primary/20 hover:border-primary"
               >
                 Leave a Review
               </Button>
+              {isBookingsModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+
+                  {/* Modal Container */}
+                  <div className="relative w-full max-w-3xl max-h-[85vh] overflow-y-auto bg-white rounded-3xl shadow-2xl p-8 animate-in fade-in zoom-in-95 duration-300">
+
+                    {/* Close Button */}
+                    <button
+                      onClick={() => setIsBookingsModalOpen(false)}
+                      className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-lg font-semibold"
+                    >
+                      ✕
+                    </button>
+
+                    {isBookingsModalOpen && (
+                      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+
+                        <div className="relative w-full max-w-3xl max-h-[85vh] overflow-y-auto 
+                    bg-background rounded-3xl shadow-2xl p-10">
+
+                          <button
+                            onClick={() => setIsBookingsModalOpen(false)}
+                            className="absolute top-6 right-6 text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            ✕
+                          </button>
+
+                          <div className="text-center mb-8">
+                            <h3 className="text-3xl font-light text-foreground">
+                              Select a Booking to Review
+                            </h3>
+                            <p className="text-muted-foreground mt-2">
+                              Choose your recent appointment below
+                            </p>
+                          </div>
+
+                          <BookingsList
+                            bookings={bookings}
+                            onSelectBooking={handleSelectBooking}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                </div>
+              )}
+
+
             </div>
+
           </motion.div>
         </div>
+        {selectedBooking && (
+          <ReviewModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            booking={selectedBooking!}
+            onSubmit={handleReviewSubmit}
+          />
+
+        )}
       </section>
+
+
     </div>
   );
 }

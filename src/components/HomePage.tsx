@@ -15,7 +15,7 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
-  
+
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end start"]
@@ -73,22 +73,22 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
   return (
     <div ref={containerRef} className="overflow-hidden">
       {/* Hero Section */}
-      <motion.section 
+      <motion.section
         className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-secondary via-white to-accent"
         style={{ y: heroY, opacity: heroOpacity }}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/10" />
-        
+
         <div className="container mx-auto px-4 z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <motion.div 
+            <motion.div
               className="space-y-8"
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
               <div className="space-y-4">
-                <motion.p 
+                <motion.p
                   className="text-primary uppercase tracking-wide text-sm"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -96,8 +96,8 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
                 >
                   Premium Beauty Experience
                 </motion.p>
-                
-                <motion.h1 
+
+                <motion.h1
                   className="text-4xl md:text-6xl lg:text-7xl font-light text-foreground leading-tight"
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -106,44 +106,55 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
                   MK
                   <span className="block text-primary italic">Salon</span>
                 </motion.h1>
-                
-                <motion.p 
+
+                <motion.p
                   className="text-lg md:text-xl text-muted-foreground max-w-lg leading-relaxed"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.8 }}
                 >
-                  Where beauty meets artistry. Experience luxury hair and beauty services 
+                  Where beauty meets artistry. Experience luxury hair and beauty services
                   in our serene, modern sanctuary.
                 </motion.p>
               </div>
 
-              <motion.div 
+              <motion.div
                 className="flex flex-col sm:flex-row gap-4"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1 }}
               >
                 {userRole !== 'admin' && (
-                  <Button 
+                  <Button
                     size="lg"
-                    onClick={() => setCurrentPage('booking')}
+                    onClick={() => {
+                      sessionStorage.setItem(
+                        'selectedBooking',
+                        JSON.stringify({
+                          bookingType: 'appointment', // 👈 NEW TYPE
+                          name: 'General Appointment',
+                          duration: null,
+                          price: 0
+                        })
+                      );
+                      setCurrentPage('booking');
+                    }}
                     className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 px-8 py-6 text-lg group"
                   >
                     Book Appointment
                     <Calendar className="ml-2 h-5 w-5 group-hover:scale-110 transition-transform" />
                   </Button>
+
                 )}
-                
-                <Button 
+
+                <Button
                   size="lg"
                   variant={userRole === 'admin' ? 'default' : 'outline'}
                   onClick={() => setCurrentPage('services')}
-                  className={`px-8 py-6 text-lg group ${
-                    userRole === 'admin' 
-                      ? 'bg-gradient-to-r from-primary to-accent text-primary-foreground border-0' 
+                  className={`px-8 py-6 text-lg group ${userRole === 'admin'
+                      ? 'bg-gradient-to-r from-primary to-accent text-primary-foreground border-0'
                       : 'border-primary/20 hover:border-primary'
-                  }`}
+                    }`}
                 >
                   View Services
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -151,7 +162,7 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
               </motion.div>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               className="relative"
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -165,9 +176,9 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
               </div>
-              
+
               {/* Floating Stats Card */}
-              <motion.div 
+              <motion.div
                 className="absolute -bottom-8 -left-8 bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-primary/10"
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -191,7 +202,7 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
       {/* Video Intro Section */}
       <section className="py-24 bg-gradient-to-br from-white via-secondary/20 to-accent/10">
         <div className="container mx-auto px-4">
-          <motion.div 
+          <motion.div
             className="text-center space-y-8 mb-16"
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -213,12 +224,12 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
               <span className="block text-primary italic">MK Difference</span>
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Discover our salon's story, meet our talented team, and see the artistry 
+              Discover our salon's story, meet our talented team, and see the artistry
               that goes into every transformation at MK Salon.
             </p>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             className="max-w-5xl mx-auto"
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -290,7 +301,7 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
               {/* Video Description */}
               <div className="p-8 bg-white/80 backdrop-blur-sm">
                 <div className="grid md:grid-cols-3 gap-6 text-center">
-                  <motion.div 
+                  <motion.div
                     className="space-y-3"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -304,7 +315,7 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
                     <p className="text-sm text-muted-foreground">Watch our skilled stylists create stunning transformations</p>
                   </motion.div>
 
-                  <motion.div 
+                  <motion.div
                     className="space-y-3"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -318,7 +329,7 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
                     <p className="text-sm text-muted-foreground">Experience our serene and elegant salon atmosphere</p>
                   </motion.div>
 
-                  <motion.div 
+                  <motion.div
                     className="space-y-3"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -334,14 +345,14 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
                 </div>
 
                 {userRole !== 'admin' && (
-                  <motion.div 
+                  <motion.div
                     className="text-center mt-8"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.4 }}
                   >
-                    <Button 
+                    <Button
                       onClick={() => setCurrentPage('booking')}
                       className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 px-8 py-3"
                     >
@@ -354,7 +365,7 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
           </motion.div>
 
           {/* Additional Video Info */}
-          <motion.div 
+          <motion.div
             className="grid md:grid-cols-2 gap-8 mt-16 max-w-4xl mx-auto"
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -364,16 +375,16 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
             <div className="text-center md:text-left space-y-4">
               <h3 className="text-xl font-semibold text-foreground">Our Story</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Founded with a passion for beauty and excellence, MK Salon has been transforming 
-                lives through the art of hair and beauty for over 15 years. Our video showcases 
+                Founded with a passion for beauty and excellence, MK Salon has been transforming
+                lives through the art of hair and beauty for over 15 years. Our video showcases
                 the dedication, skill, and artistry that defines our approach to beauty.
               </p>
             </div>
             <div className="text-center md:text-left space-y-4">
               <h3 className="text-xl font-semibold text-foreground">Meet Our Team</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Get to know the talented professionals who bring their expertise and creativity 
-                to every appointment. Our team's commitment to excellence and continuous learning 
+                Get to know the talented professionals who bring their expertise and creativity
+                to every appointment. Our team's commitment to excellence and continuous learning
                 ensures you receive the best possible service every time you visit.
               </p>
             </div>
@@ -384,7 +395,7 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
       {/* Services Section */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
-          <motion.div 
+          <motion.div
             className="text-center space-y-4 mb-16"
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -396,7 +407,7 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
               Signature Services
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Discover our range of premium beauty and wellness services, 
+              Discover our range of premium beauty and wellness services,
               crafted to enhance your natural beauty.
             </p>
           </motion.div>
@@ -429,7 +440,7 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="p-6 space-y-3">
                       <h3 className="text-xl font-semibold text-foreground">{service.title}</h3>
                       <p className="text-muted-foreground">{service.description}</p>
@@ -478,7 +489,7 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
       {/* CTA Section */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
-          <motion.div 
+          <motion.div
             className="text-center space-y-8 max-w-3xl mx-auto"
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -489,12 +500,12 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
               Ready to Transform Your Look?
             </h2>
             <p className="text-lg text-muted-foreground">
-              Book your appointment today and experience the luxury you deserve. 
+              Book your appointment today and experience the luxury you deserve.
               Our expert stylists are ready to bring your vision to life.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               {userRole !== 'admin' && (
-                <Button 
+                <Button
                   size="lg"
                   onClick={() => setCurrentPage('booking')}
                   className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 px-8 py-6 text-lg"
@@ -502,7 +513,7 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
                   Book Your Session
                 </Button>
               )}
-              <Button 
+              <Button
                 size="lg"
                 variant="outline"
                 onClick={() => setCurrentPage('gallery')}
