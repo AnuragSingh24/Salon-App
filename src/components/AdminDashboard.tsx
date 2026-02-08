@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { Calendar, Users, DollarSign, TrendingUp, Clock, Settings, Plus, Edit, Trash2, Eye } from 'lucide-react';
 import { Button } from './ui/button';
@@ -7,35 +7,259 @@ import { Badge } from './ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
+
 interface AdminDashboardProps {
   setCurrentPage: (page: string) => void;
 }
 
 export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
   const [selectedTab, setSelectedTab] = useState('overview');
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [todayAppointments, setTodayAppointments] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
+  const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
+  const editRef = useRef<HTMLTableCellElement | null>(null);
+  const [filterDate, setFilterDate] = useState<string>("");
+  const [editingAppointmentId, setEditingAppointmentId] = useState<string | null>(null);
+  const appointmentEditRef = useRef<HTMLTableCellElement | null>(null);
 
-  const stats = [
-    { icon: DollarSign, label: 'Today\'s Revenue', value: '$2,850', change: '+12%', color: 'text-green-600' },
-    { icon: Users, label: 'Total Clients', value: '156', change: '+8%', color: 'text-blue-600' },
-    { icon: Calendar, label: 'Appointments Today', value: '24', change: '+5%', color: 'text-purple-600' },
-    { icon: TrendingUp, label: 'Monthly Growth', value: '18%', change: '+3%', color: 'text-orange-600' }
-  ];
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const res = await fetch("/api/admin/dashboard-stats/", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        });
 
-  const todayAppointments = [
-    { id: 1, time: '9:00 AM', client: 'Sarah Johnson', service: 'Balayage Highlights', stylist: 'Emma Rodriguez', status: 'confirmed', duration: 150 },
-    { id: 2, time: '10:30 AM', client: 'Maria Garcia', service: 'Precision Cut', stylist: 'Sarah Chen', status: 'in-progress', duration: 60 },
-    { id: 3, time: '12:00 PM', client: 'Amanda Chen', service: 'Bridal Package', stylist: 'Maria Santos', status: 'confirmed', duration: 240 },
-    { id: 4, time: '2:30 PM', client: 'Jessica Williams', service: 'Color Transformation', stylist: 'Alex Thompson', status: 'confirmed', duration: 120 },
-    { id: 5, time: '4:00 PM', client: 'Rachel Thompson', service: 'Spa Facial', stylist: 'Maria Santos', status: 'confirmed', duration: 90 }
-  ];
+        const data = await res.json();
+        setDashboardData(data);
+      } catch (error) {
+        console.error("Dashboard fetch error:", error);
+      }
+    };
 
-  const services = [
-    { id: 1, name: 'Precision Haircut', price: 85, duration: 60, category: 'Hair', active: true },
-    { id: 2, name: 'Color Transformation', price: 150, duration: 120, category: 'Hair', active: true },
-    { id: 3, name: 'Balayage Highlights', price: 180, duration: 150, category: 'Hair', active: true },
-    { id: 4, name: 'Signature Facial', price: 120, duration: 90, category: 'Spa', active: true },
-    { id: 5, name: 'Relaxation Massage', price: 110, duration: 60, category: 'Spa', active: true }
-  ];
+    fetchDashboard();
+  }, []);
+
+
+  const stats = dashboardData
+    ? [
+      {
+        icon: DollarSign,
+        label: "Today's Revenue",
+        value: `$${dashboardData.data.todayRevenue}`,
+        change: "",
+        color: "text-green-600"
+      },
+      {
+        icon: Users,
+        label: "Total Clients",
+        value: dashboardData.data.totalClients,
+        change: "",
+        color: "text-blue-600"
+      },
+      {
+        icon: Calendar,
+        label: "Appointments Today",
+        value: dashboardData.data.appointmentsToday,
+        change: "",
+        color: "text-purple-600"
+      },
+      {
+        icon: TrendingUp,
+        label: "Monthly Revenue",
+        value: `$${dashboardData.data.monthlyGrowth}`,
+        change: "",
+        color: "text-orange-600"
+      }
+    ]
+    : [];
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        editRef.current &&
+        !editRef.current.contains(event.target as Node)
+      ) {
+        setEditingServiceId(null);
+      }
+    };
+
+    if (editingServiceId) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [editingServiceId]);
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const res = await fetch("/api/admin/today-appointments", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          setTodayAppointments(data.data);
+          console.log(data.data);
+        }
+
+      } catch (error) {
+        console.error("Appointments fetch error:", error);
+      }
+    };
+
+    fetchAppointments();
+  }, []);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const res = await fetch("/api/admin/services", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          setServices(data.data);
+          ;
+        }
+
+      } catch (error) {
+        console.error("Services fetch error:", error);
+      }
+    };
+
+    fetchServices();
+  }, []);
+
+  const handleStatusChange = async (id: string, newStatus: boolean) => {
+    try {
+      const res = await fetch(`/api/admin/services/${id}/status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({ active: newStatus })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        // update UI instantly
+        setServices((prev) =>
+          prev.map((service) =>
+            service.id === id   // ✅ FIXED
+              ? { ...service, active: newStatus }
+              : service
+          )
+        );
+
+        setEditingServiceId(null);
+      }
+    } catch (error) {
+      console.error("Status update error:", error);
+    }
+  };
+
+  const handleFilterByDate = async () => {
+    if (!filterDate) return;
+
+    try {
+      const res = await fetch(
+        `/api/admin/appointments-by-date?date=${filterDate}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.success) {
+        setTodayAppointments(data.data);
+      }
+
+    } catch (error) {
+      console.error("Filter error:", error);
+    }
+  };
+
+  const handleDeleteBooking = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this booking?")) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/bookings/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        // remove from UI instantly
+        setTodayAppointments((prev) =>
+          prev.filter((booking) => booking._id !== id)
+        );
+
+      }
+
+    } catch (error) {
+      console.error("Delete booking error:", error);
+    }
+  };
+
+
+  const handleAppointmentStatusChange = async (
+    id: string,
+    newStatus: string
+  ) => {
+    try {
+      const res = await fetch(`/api/bookings/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setTodayAppointments((prev) =>
+          prev.map((appointment) =>
+            appointment._id === id
+              ? { ...appointment, status: newStatus }
+              : appointment
+          )
+        );
+
+        setEditingAppointmentId(null);
+      }
+    } catch (error) {
+      console.error("Status update error:", error);
+    }
+  };
+
+
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -51,7 +275,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
     <div className="min-h-screen bg-gradient-to-br from-white via-secondary/30 to-accent/20">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <motion.div 
+        <motion.div
           className="mb-8"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -65,14 +289,14 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
               </p>
             </div>
             <div className="flex gap-3">
-              <Button 
+              <Button
                 variant="outline"
                 className="border-primary/20 hover:border-primary"
               >
                 <Settings className="w-4 h-4 mr-2" />
                 Settings
               </Button>
-              <Button 
+              <Button
                 onClick={() => setCurrentPage('booking')}
                 className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0"
               >
@@ -84,7 +308,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
         </motion.div>
 
         {/* Stats Cards */}
-        <motion.div 
+        <motion.div
           className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -159,21 +383,48 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
                         <div>
                           <h4 className="font-medium text-foreground">{appointment.client}</h4>
                           <p className="text-sm text-muted-foreground">{appointment.service}</p>
-                          <p className="text-xs text-muted-foreground">with {appointment.stylist}</p>
+                          <p className="text-xs text-muted-foreground">
+                            with {appointment.stylist}
+                          </p>
+
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center space-x-3">
-                        <Badge className={getStatusColor(appointment.status)}>
-                          {appointment.status}
-                        </Badge>
+                        <div
+                          ref={editingAppointmentId === appointment._id ? appointmentEditRef : null}
+                        >
+                          {editingAppointmentId === appointment._id ? (
+                            <select
+                              value={appointment.status}
+                              onChange={(e) =>
+                                handleAppointmentStatusChange(appointment._id, e.target.value)
+                              }
+                              className="border rounded px-2 py-1 text-sm"
+                              autoFocus
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="confirmed">Confirmed</option>
+                              <option value="completed">Completed</option>
+                              <option value="cancelled">Cancelled</option>
+                            </select>
+                          ) : (
+                            <Badge
+                              onClick={() => setEditingAppointmentId(appointment._id)}
+                              className={`${getStatusColor(appointment.status)} cursor-pointer`}
+                            >
+                              {appointment.status}
+                            </Badge>
+                          )}
+                        </div>
+
                         <div className="flex space-x-1">
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                          {/* <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
                             <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                          </Button> */}
+                          {/* <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
                             <Edit className="w-4 h-4" />
-                          </Button>
+                          </Button> */}
                         </div>
                       </div>
                     </motion.div>
@@ -187,16 +438,25 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
               <Card className="p-6 bg-white/90 backdrop-blur-sm border-0 shadow-lg">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-foreground">Appointment Management</h3>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="border-primary/20 hover:border-primary">
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="date"
+                      value={filterDate}
+                      onChange={(e) => setFilterDate(e.target.value)}
+                      className="border rounded px-2 py-1 text-sm"
+                    />
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleFilterByDate}
+                      className="border-primary/20 hover:border-primary"
+                    >
                       <Calendar className="w-4 h-4 mr-2" />
-                      Filter by Date
-                    </Button>
-                    <Button size="sm" className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Appointment
+                      Filter
                     </Button>
                   </div>
+
                 </div>
 
                 <div className="overflow-x-auto">
@@ -225,15 +485,22 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
                           </TableCell>
                           <TableCell>
                             <div className="flex space-x-1">
-                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                              {/* <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
                                 <Eye className="w-4 h-4" />
-                              </Button>
-                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                              </Button> */}
+                              {/* <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
                                 <Edit className="w-4 h-4" />
-                              </Button>
-                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-destructive">
+                              </Button> */}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0 text-destructive"
+                                onClick={() => handleDeleteBooking(appointment._id)}
+
+                              >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
+
                             </div>
                           </TableCell>
                         </TableRow>
@@ -249,10 +516,10 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
               <Card className="p-6 bg-white/90 backdrop-blur-sm border-0 shadow-lg">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-foreground">Service Management</h3>
-                  <Button className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0">
+                  {/* <Button className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0">
                     <Plus className="w-4 h-4 mr-2" />
                     Add New Service
-                  </Button>
+                  </Button> */}
                 </div>
 
                 <div className="overflow-x-auto">
@@ -272,26 +539,62 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
                         <TableRow key={service.id}>
                           <TableCell className="font-medium">{service.name}</TableCell>
                           <TableCell>{service.category}</TableCell>
-                          <TableCell className="text-primary font-semibold">${service.price}</TableCell>
-                          <TableCell>{service.duration} min</TableCell>
-                          <TableCell>
-                            <Badge className={service.active ? 'bg-green-100 text-green-800 border-green-200' : 'bg-gray-100 text-gray-800 border-gray-200'}>
-                              {service.active ? 'Active' : 'Inactive'}
-                            </Badge>
+                          <TableCell className="text-primary font-semibold">
+                            ${service.price}
                           </TableCell>
+                          <TableCell>{service.duration} min</TableCell>
+
+                          <TableCell ref={editingServiceId === service.id ? editRef : null}>
+                            {editingServiceId === service.id ? (
+                              <select
+                                value={service.active ? "true" : "false"}
+                                onChange={(e) =>
+                                  handleStatusChange(service.id, e.target.value === "true")
+                                }
+                                className="border rounded px-2 py-1 text-sm"
+                                autoFocus
+                              >
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                              </select>
+                            ) : (
+                              <Badge
+                                className={
+                                  service.active
+                                    ? "bg-green-100 text-green-800 border-green-200"
+                                    : "bg-gray-100 text-gray-800 border-gray-200"
+                                }
+                              >
+                                {service.active ? "Active" : "Inactive"}
+                              </Badge>
+                            )}
+                          </TableCell>
+
+
                           <TableCell>
                             <div className="flex space-x-1">
-                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0"
+                                onClick={() => setEditingServiceId(service.id)}
+                              >
                                 <Edit className="w-4 h-4" />
                               </Button>
-                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-destructive">
+
+                              {/* <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0 text-destructive"
+                              >
                                 <Trash2 className="w-4 h-4" />
-                              </Button>
+                              </Button> */}
                             </div>
                           </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
+
                   </Table>
                 </div>
               </Card>
@@ -299,6 +602,6 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
           </Tabs>
         </motion.div>
       </div>
-    </div>
+    </div >
   );
 }

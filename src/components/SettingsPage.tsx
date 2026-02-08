@@ -100,6 +100,7 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
       });
 
       localStorage.removeItem("token");
+      localStorage.removeItem("role")
       setIsAuthenticated(false);
       setCurrentPage("login");
 
@@ -115,7 +116,7 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
     // 1. Remove auth data
     localStorage.removeItem("token");
     sessionStorage.removeItem("isLoggedIn");
-
+    localStorage.removeItem("role");
     // OR if you prefer explicit false
     sessionStorage.setItem("isLoggedIn", "false");
 

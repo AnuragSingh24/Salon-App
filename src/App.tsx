@@ -1,4 +1,4 @@
-import React, { useState, Suspense ,useEffect} from 'react';
+import React, { useState, Suspense, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { FallbackPage } from './components/FallbackPage';
@@ -56,27 +56,32 @@ interface SettingsPageProps extends BasePageProps {
 export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userRole, setUserRole] = useState('customer'); // 'customer' or 'admin'
+  const [userRole, setUserRole] = useState(null); // 'customer' or 'admin'
   const [isLoading, setIsLoading] = useState(true);
-  
-   
 
 
-   useEffect(() => {
-    const token = localStorage.getItem("token");      // JWT
+
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
     const isLogged = sessionStorage.getItem("isLoggedIn");
 
     if (token && isLogged === "true") {
       setIsAuthenticated(true);
 
-      // If you store role somewhere in localStorage:
-      const role = localStorage.getItem("role") || "user";
-      setUserRole(role);
+      const role = localStorage.getItem("role"); // must be set during login
+      console.log(role);
+      if (role === "admin") {
+        setUserRole("admin");
+      } else {
+        setUserRole("customer");
+      }
     } else {
       setIsAuthenticated(false);
-      setUserRole("user");
+      setUserRole("customer");
     }
   }, []);
+
 
   // Initialize app
   React.useEffect(() => {
@@ -84,41 +89,16 @@ export default function App() {
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 100);
-    
+
     return () => clearTimeout(timer);
   }, []);
 
-  // Admin access shortcut (for development/testing)
-  React.useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      // Press 'Ctrl + Shift + A' to toggle admin access
-      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
-        setIsAuthenticated(true);
-        setUserRole('admin');
-        setCurrentPage('admin');
-      }
-      // Press 'Ctrl + Shift + C' to toggle customer access
-      if (e.ctrlKey && e.shiftKey && e.key === 'C') {
-        setIsAuthenticated(true);
-        setUserRole('customer');
-        setCurrentPage('profile');
-      }
-      // Press 'Ctrl + Shift + L' to logout
-      if (e.ctrlKey && e.shiftKey && e.key === 'L') {
-        setIsAuthenticated(false);
-        setUserRole('customer');
-        setCurrentPage('home');
-      }
-    };
 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, []);
 
   // Render different components based on currentPage with error handling
   const renderCurrentPage = () => {
     const baseProps = { setCurrentPage };
-    
+
     try {
       switch (currentPage) {
         case 'home':
@@ -132,7 +112,10 @@ export default function App() {
         case 'profile':
           return <ProfilePage {...baseProps} />;
         case 'admin':
-          return <AdminDashboard {...baseProps} />;
+          return userRole === "admin"
+            ? <AdminDashboard {...baseProps} />
+            : <HomePage {...baseProps} userRole={userRole} />;
+
         case 'gallery':
           return <GalleryPage {...baseProps} />;
         case 'reviews':
@@ -167,13 +150,13 @@ export default function App() {
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-background">
-        <Navigation 
+        <Navigation
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
           isAuthenticated={isAuthenticated}
           userRole={userRole}
         />
-        
+
         <Suspense fallback={<LoadingSpinner />}>
           <AnimatePresence mode="wait">
             <motion.div
