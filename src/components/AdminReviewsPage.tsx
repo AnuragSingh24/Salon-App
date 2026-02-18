@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Star, Reply, Trash2, Eye, MessageSquare, Calendar, User, Send, X } from 'lucide-react';
 import { Button } from './ui/button';
@@ -26,7 +26,7 @@ export function AdminReviewsPage() {
     {
       id: '1',
       customerName: 'Sarah Johnson',
-      customerAvatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b95c?w=150',
+
       rating: 5,
       comment: 'Absolutely amazing experience! The staff was professional and the result was beyond my expectations.',
       service: 'Bridal Hair Styling',
@@ -61,16 +61,21 @@ export function AdminReviewsPage() {
   const [replyText, setReplyText] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterRating, setFilterRating] = useState<string>('all');
+  const [dashboard, setDashboard] = useState({
+    averageRating: 0,
+    totalReviews: 0,
+    repliedReviews: 0
+  });
 
   const handleReply = (reviewId: string) => {
-    setReviews(reviews.map(review => 
-      review.id === reviewId 
-        ? { 
-            ...review, 
-            status: 'replied', 
-            reply: replyText,
-            replyDate: new Date().toISOString().split('T')[0]
-          }
+    setReviews(reviews.map(review =>
+      review.id === reviewId
+        ? {
+          ...review,
+          status: 'replied',
+          reply: replyText,
+          replyDate: new Date().toISOString().split('T')[0]
+        }
         : review
     ));
     setReplyingTo(null);
@@ -82,7 +87,7 @@ export function AdminReviewsPage() {
   };
 
   const handleStatusChange = (reviewId: string, newStatus: 'pending' | 'approved') => {
-    setReviews(reviews.map(review => 
+    setReviews(reviews.map(review =>
       review.id === reviewId ? { ...review, status: newStatus } : review
     ));
   };
@@ -91,9 +96,8 @@ export function AdminReviewsPage() {
     return Array.from({ length: 5 }, (_, index) => (
       <Star
         key={index}
-        className={`w-4 h-4 ${
-          index < rating ? 'text-yellow-500 fill-current' : 'text-gray-300'
-        }`}
+        className={`w-4 h-4 ${index < rating ? 'text-yellow-500 fill-current' : 'text-gray-300'
+          }`}
       />
     ));
   };
@@ -107,15 +111,55 @@ export function AdminReviewsPage() {
     }
   };
 
-  const filteredReviews = reviews.filter(review => {
-    if (filterStatus !== 'all' && review.status !== filterStatus) return false;
-    if (filterRating !== 'all' && review.rating.toString() !== filterRating) return false;
-    return true;
-  });
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const token = localStorage.getItem("token");
 
-  const averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
-  const totalReviews = reviews.length;
-  const pendingReviews = reviews.filter(r => r.status === 'pending').length;
+        const params = new URLSearchParams();
+        if (filterRating !== "all") {
+          params.append("rating", filterRating);
+        }
+
+        const res = await fetch(`/api/reviews/admin?${params.toString()}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        const data = await res.json();
+        setReviews(data);
+      } catch (err) {
+        console.error("Failed to fetch reviews", err);
+      }
+    };
+
+    fetchReviews();
+  }, [filterRating]);
+
+
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const token = localStorage.getItem('token');
+
+        const res = await fetch('/api/reviews/dashboard', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        const data = await res.json();
+        setDashboard(data);
+      } catch (err) {
+        console.error('Failed to fetch review dashboard', err);
+      }
+    };
+
+    fetchDashboard();
+  }, []);
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-secondary/30 to-accent/20 py-8">
@@ -135,7 +179,7 @@ export function AdminReviewsPage() {
         </motion.div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -143,9 +187,12 @@ export function AdminReviewsPage() {
           >
             <Card className="p-6 text-center">
               <div className="flex items-center justify-center space-x-1 mb-2">
-                {renderStars(Math.round(averageRating))}
+                {renderStars(Math.round(dashboard.averageRating))}
               </div>
-              <p className="text-2xl font-semibold text-foreground">{averageRating.toFixed(1)}</p>
+              <p className="text-2xl font-semibold text-foreground">
+                {dashboard.averageRating.toFixed(1)}
+              </p>
+
               <p className="text-sm text-muted-foreground">Average Rating</p>
             </Card>
           </motion.div>
@@ -156,21 +203,14 @@ export function AdminReviewsPage() {
           >
             <Card className="p-6 text-center">
               <MessageSquare className="w-8 h-8 mx-auto mb-2 text-primary" />
-              <p className="text-2xl font-semibold text-foreground">{totalReviews}</p>
+              <p className="text-2xl font-semibold text-foreground">
+                {dashboard.totalReviews}
+              </p>
+
               <p className="text-sm text-muted-foreground">Total Reviews</p>
             </Card>
           </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Card className="p-6 text-center">
-              <Eye className="w-8 h-8 mx-auto mb-2 text-yellow-500" />
-              <p className="text-2xl font-semibold text-foreground">{pendingReviews}</p>
-              <p className="text-sm text-muted-foreground">Pending Review</p>
-            </Card>
-          </motion.div>
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -179,8 +219,9 @@ export function AdminReviewsPage() {
             <Card className="p-6 text-center">
               <Reply className="w-8 h-8 mx-auto mb-2 text-blue-500" />
               <p className="text-2xl font-semibold text-foreground">
-                {reviews.filter(r => r.status === 'replied').length}
+                {dashboard.repliedReviews}
               </p>
+
               <p className="text-sm text-muted-foreground">Replied</p>
             </Card>
           </motion.div>
@@ -195,20 +236,7 @@ export function AdminReviewsPage() {
         >
           <Card className="p-6">
             <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-              <div className="flex-1">
-                <label className="text-sm font-medium mb-2 block">Filter by Status</label>
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="approved">Approved</SelectItem>
-                    <SelectItem value="replied">Replied</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+
               <div className="flex-1">
                 <label className="text-sm font-medium mb-2 block">Filter by Rating</label>
                 <Select value={filterRating} onValueChange={setFilterRating}>
@@ -231,7 +259,7 @@ export function AdminReviewsPage() {
 
         {/* Reviews List */}
         <div className="space-y-6">
-          {filteredReviews.map((review, index) => (
+          {reviews.map((review, index) => (
             <motion.div
               key={review.id}
               initial={{ opacity: 0, y: 20 }}
@@ -241,8 +269,8 @@ export function AdminReviewsPage() {
               <Card className="p-6">
                 <div className="flex items-start space-x-4">
                   <Avatar className="w-12 h-12">
-                    <img 
-                      src={review.customerAvatar} 
+                    <img
+                      src={"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSgDGgxK15fCpe0UseaP0_ZHZaBvZl7cGxbgQ&s"}
                       alt={review.customerName}
                       className="w-full h-full object-cover rounded-full"
                     />
@@ -255,9 +283,7 @@ export function AdminReviewsPage() {
                           <div className="flex items-center space-x-1">
                             {renderStars(review.rating)}
                           </div>
-                          <Badge className={getStatusColor(review.status)}>
-                            {review.status}
-                          </Badge>
+                      
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -267,9 +293,9 @@ export function AdminReviewsPage() {
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="mb-3">
-                      <p className="text-sm text-muted-foreground mb-1">Service: {review.service}</p>
+                      <p className="text-sm text-muted-foreground mb-1">{review.service}</p>
                       <p className="text-foreground">{review.comment}</p>
                     </div>
 
@@ -295,7 +321,7 @@ export function AdminReviewsPage() {
                           rows={3}
                         />
                         <div className="flex space-x-2">
-                          <Button 
+                          <Button
                             size="sm"
                             onClick={() => handleReply(review.id)}
                             className="bg-gradient-to-r from-primary to-accent text-primary-foreground"
@@ -303,8 +329,8 @@ export function AdminReviewsPage() {
                             <Send className="w-4 h-4 mr-2" />
                             Send Reply
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={() => {
                               setReplyingTo(null);
@@ -319,8 +345,8 @@ export function AdminReviewsPage() {
                     ) : (
                       <div className="flex space-x-2">
                         {!review.reply && (
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={() => setReplyingTo(review.id)}
                           >
@@ -328,19 +354,8 @@ export function AdminReviewsPage() {
                             Reply
                           </Button>
                         )}
-                        {review.status === 'pending' && (
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleStatusChange(review.id, 'approved')}
-                            className="text-green-600 hover:text-green-600"
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            Approve
-                          </Button>
-                        )}
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => handleDeleteReview(review.id)}
                           className="text-destructive hover:text-destructive"
@@ -357,7 +372,7 @@ export function AdminReviewsPage() {
           ))}
         </div>
 
-        {filteredReviews.length === 0 && (
+        {reviews.length === 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

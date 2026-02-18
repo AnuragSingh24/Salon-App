@@ -21,6 +21,9 @@ import { AdminPackagesPage } from './components/AdminPackagesPage';
 import { AdminReviewsPage } from './components/AdminReviewsPage';
 import { SettingsPage } from './components/SettingsPage';
 import { Navigation } from './components/Navigation';
+import { ForgotPasswordPage } from './components/ForgotPasswordPage';
+import { GoogleAuthSuccess } from "./components/GoogleAuthSuccess";
+
 
 // Loading component
 const LoadingSpinner = () => (
@@ -59,6 +62,14 @@ export default function App() {
   const [userRole, setUserRole] = useState(null); // 'customer' or 'admin'
   const [isLoading, setIsLoading] = useState(true);
 
+
+  useEffect(() => {
+    const path = window.location.pathname.replace("/", "");
+
+    if (path) {
+      setCurrentPage(path);
+    }
+  }, []);
 
 
 
@@ -126,10 +137,22 @@ export default function App() {
           return <ContactPage {...baseProps} />;
         case 'timeslots':
           return <TimeSlotsPage />;
+        case "auth-success":
+          return (
+            <GoogleAuthSuccess
+              setIsAuthenticated={setIsAuthenticated}
+              setUserRole={setUserRole}
+              setCurrentPage={setCurrentPage}
+            />
+          );
+
         case 'admin-services':
           return <AdminServicesPage />;
         case 'admin-packages':
           return <AdminPackagesPage />;
+        case 'forgot-password':
+          return <ForgotPasswordPage setCurrentPage={setCurrentPage} />;
+
         case 'admin-reviews':
           return <AdminReviewsPage />;
         case 'settings':

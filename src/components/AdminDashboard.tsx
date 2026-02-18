@@ -16,6 +16,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
   const [selectedTab, setSelectedTab] = useState('overview');
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [todayAppointments, setTodayAppointments] = useState<any[]>([]);
+  const [allAppointments, setAllAppointments] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const editRef = useRef<HTMLTableCellElement | null>(null);
@@ -48,7 +49,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
       {
         icon: DollarSign,
         label: "Today's Revenue",
-        value: `$${dashboardData.data.todayRevenue}`,
+        value: `₹${dashboardData.data.todayRevenue}`,
         change: "",
         color: "text-green-600"
       },
@@ -69,7 +70,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
       {
         icon: TrendingUp,
         label: "Monthly Revenue",
-        value: `$${dashboardData.data.monthlyGrowth}`,
+        value: `₹${dashboardData.data.monthlyGrowth}`,
         change: "",
         color: "text-orange-600"
       }
@@ -189,7 +190,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
       const data = await res.json();
 
       if (data.success) {
-        setTodayAppointments(data.data);
+        setAllAppointments(data.data);
       }
 
     } catch (error) {
@@ -243,11 +244,17 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
       const data = await res.json();
 
       if (data.success) {
+        // ✅ Update Today Appointments
         setTodayAppointments((prev) =>
-          prev.map((appointment) =>
-            appointment._id === id
-              ? { ...appointment, status: newStatus }
-              : appointment
+          prev.map((a) =>
+            a._id === id ? { ...a, status: newStatus } : a
+          )
+        );
+
+        // ✅ Update All Appointments
+        setAllAppointments((prev) =>
+          prev.map((a) =>
+            a.id === id ? { ...a, status: newStatus } : a
           )
         );
 
@@ -257,6 +264,9 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
       console.error("Status update error:", error);
     }
   };
+
+
+
 
 
 
@@ -472,7 +482,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {todayAppointments.map((appointment) => (
+                      {allAppointments.map((appointment) => (
                         <TableRow key={appointment.id}>
                           <TableCell className="font-medium">{appointment.time}</TableCell>
                           <TableCell>{appointment.client}</TableCell>
@@ -540,7 +550,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
                           <TableCell className="font-medium">{service.name}</TableCell>
                           <TableCell>{service.category}</TableCell>
                           <TableCell className="text-primary font-semibold">
-                            ${service.price}
+                            ₹{service.price}
                           </TableCell>
                           <TableCell>{service.duration} min</TableCell>
 
@@ -549,7 +559,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
                               <select
                                 value={service.active ? "true" : "false"}
                                 onChange={(e) =>
-                                  handleStatusChange(service.id, e.target.value === "true")
+                                  handleStatusChange(service._id, e.target.value === "true")
                                 }
                                 className="border rounded px-2 py-1 text-sm"
                                 autoFocus

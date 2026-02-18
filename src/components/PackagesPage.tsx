@@ -191,11 +191,11 @@ export function PackagesPage({ setCurrentPage }: PackagesPageProps) {
                       {/* Price */}
                       <div className="text-right">
                         <div className="text-xl font-bold text-primary">
-                          ${pkg.price}
+                          ₹{pkg.price}
                         </div>
                         {pkg.originalPrice && pkg.originalPrice > pkg.price && (
                           <div className="text-sm line-through text-muted-foreground">
-                            ${pkg.originalPrice}
+                            ₹{pkg.originalPrice}
                           </div>
                         )}
                       </div>

@@ -229,10 +229,12 @@ export function AuthPage({ setCurrentPage, setIsAuthenticated, setUserRole }: Au
                 <div className="flex justify-end">
                   <button
                     type="button"
+                    onClick={() => setCurrentPage("forgot-password")}
                     className="text-sm text-primary hover:text-accent transition-colors"
                   >
                     Forgot your password?
                   </button>
+
                 </div>
               )}
 
@@ -259,7 +261,10 @@ export function AuthPage({ setCurrentPage, setIsAuthenticated, setUserRole }: Au
                   type="button"
                   variant="outline"
                   className="w-full py-3 border-primary/20 hover:border-primary hover:bg-primary/5"
-                  onClick={handleGoogleAuth}
+                  // onClick={handleGoogleAuth}
+                  onClick={() =>
+                    window.location.href = "http://localhost:5000/api/auth/google"
+                  }
                 >
                   <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -270,14 +275,14 @@ export function AuthPage({ setCurrentPage, setIsAuthenticated, setUserRole }: Au
                   Continue with Google
                 </Button>
 
-                <Button
+                {/* <Button
                   type="button"
                   variant="outline"
                   className="w-full py-3 border-primary/20 hover:border-primary hover:bg-primary/5"
                 >
                   <Phone className="w-5 h-5 mr-3" />
                   Continue with Phone
-                </Button>
+                </Button> */}
               </div>
             </div>
 
@@ -293,7 +298,7 @@ export function AuthPage({ setCurrentPage, setIsAuthenticated, setUserRole }: Au
                 </button>
               </p>
 
-              {isLogin && (
+              {/* {isLogin && (
                 <div className="p-3 rounded-lg bg-accent/20 border border-primary/10">
                   <p className="text-xs text-muted-foreground mb-2">Demo Admin Access:</p>
                   <div className="text-xs space-y-1">
@@ -304,7 +309,7 @@ export function AuthPage({ setCurrentPage, setIsAuthenticated, setUserRole }: Au
                     Or use keyboard shortcut: <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Ctrl + Shift + A</kbd>
                   </p>
                 </div>
-              )}
+              )} */}
             </div>
 
             {!isLogin && (

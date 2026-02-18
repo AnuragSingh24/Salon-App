@@ -304,7 +304,7 @@ export function ServicesPage({ setCurrentPage }: ServicesPageProps) {
 
                     {/* Price */}
                     <div className="absolute bottom-4 right-4 bg-primary text-primary-foreground rounded-full px-4 py-2">
-                      <span className="font-semibold">${service.price}</span>
+                      <span className="font-semibold">₹{service.price}</span>
                     </div>
                   </div>
 
@@ -325,8 +325,7 @@ export function ServicesPage({ setCurrentPage }: ServicesPageProps) {
                           <span>{service.duration}min</span>
                         </div>
                         <div className="flex items-center space-x-1">
-                          <DollarSign className="w-4 h-4" />
-                          <span>${service.price}</span>
+                          <span>₹{service.price}</span>
                         </div>
                       </div>
 

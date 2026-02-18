@@ -166,19 +166,19 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
           transition={{ delay: 0.2 }}
         >
           <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="profile" className="flex items-center space-x-2">
                 <User className="w-4 h-4" />
                 <span className="hidden sm:inline">Profile</span>
               </TabsTrigger>
-              <TabsTrigger value="notifications" className="flex items-center space-x-2">
+              {/* <TabsTrigger value="notifications" className="flex items-center space-x-2">
                 <Bell className="w-4 h-4" />
                 <span className="hidden sm:inline">Notifications</span>
               </TabsTrigger>
               <TabsTrigger value="preferences" className="flex items-center space-x-2">
                 <Palette className="w-4 h-4" />
                 <span className="hidden sm:inline">Preferences</span>
-              </TabsTrigger>
+              </TabsTrigger> */}
               <TabsTrigger value="security" className="flex items-center space-x-2">
                 <Shield className="w-4 h-4" />
                 <span className="hidden sm:inline">Security</span>
@@ -275,7 +275,7 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
             </TabsContent>
 
             {/* Notifications Tab */}
-            <TabsContent value="notifications">
+            {/* <TabsContent value="notifications">
               <Card className="p-6">
                 <div className="flex items-center space-x-3 mb-6">
                   <Bell className="w-5 h-5 text-primary" />
@@ -354,10 +354,10 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
                   </Button>
                 </div>
               </Card>
-            </TabsContent>
+            </TabsContent> */}
 
             {/* Preferences Tab */}
-            <TabsContent value="preferences">
+            {/* <TabsContent value="preferences">
               <Card className="p-6">
                 <div className="flex items-center space-x-3 mb-6">
                   <Palette className="w-5 h-5 text-primary" />
@@ -426,7 +426,7 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
                   </Button>
                 </div>
               </Card>
-            </TabsContent>
+            </TabsContent> */}
 
             {/* Security Tab */}
             <TabsContent value="security">

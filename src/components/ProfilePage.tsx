@@ -270,13 +270,15 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
         // ⚠️ Backend returns { bookings: formatted }
         const mapped = (data.bookings || []).map((b: any) => ({
           id: b.id,
-          service: b.serviceTitle,
+          bookingType: b.bookingType, // ✅ important
+          service: b.title,           // ✅ unified title from backend
           stylist: b.stylistName,
           date: b.date ? new Date(b.date).toISOString().slice(0, 10) : '',
           time: b.time,
           price: b.price ?? 0,
           rating: b.review?.rating ?? 0,
         }));
+
         setAppointmentHistory(mapped);
 
       } catch (err) {
@@ -413,7 +415,7 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Total Spent</span>
-                    <span className="font-semibold text-primary">${totalSpent}</span>
+                    <span className="font-semibold text-primary">₹{totalSpent}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Appointments</span>
@@ -736,7 +738,7 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
                                 <span>with {appointment.stylist}</span>
                                 <span>{appointment.date} at {appointment.time}</span>
                               </div>
-                              <span className="font-semibold text-primary">${appointment.price}</span>
+                              <span className="font-semibold text-primary">₹{appointment.price}</span>
                             </div>
                           </div>
                         </div>

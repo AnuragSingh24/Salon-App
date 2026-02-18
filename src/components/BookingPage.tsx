@@ -12,6 +12,15 @@ interface BookingPageProps {
   setCurrentPage: (page: string) => void;
 }
 
+type TimeSlot = {
+  _id: string;
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+  duration: number;
+  available: boolean;
+};
+
 type Stylist = {
   _id: string;              // use MongoDB _id
   name: string;
@@ -84,6 +93,8 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [checkingSlot, setCheckingSlot] = useState(false);
   const [creatingBooking, setCreatingBooking] = useState(false);
+  const [selectedDay, setSelectedDay] = useState("");
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
 
 
 
@@ -102,11 +113,31 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
     })();
   }, []);
 
-  const timeSlots = [
-    '9:00 AM', '9:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
-    '12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM', '2:00 PM', '2:30 PM',
-    '3:00 PM', '3:30 PM', '4:00 PM', '4:30 PM', '5:00 PM', '5:30 PM'
-  ];
+
+  useEffect(() => {
+    fetchTimeSlots(selectedDay);
+  }, [selectedDay]);
+
+  const fetchTimeSlots = async (day: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const res = await fetch(`/api/timeSlot/getTime?day=${day}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      setTimeSlots(data.slots || []);
+    } catch (err) {
+      console.error("Error fetching time slots", err);
+      setTimeSlots([]);
+    }
+  };
+
+
 
   const generateCalendarDays = () => {
     const today = new Date();
@@ -238,7 +269,16 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
                         ? 'bg-primary text-primary-foreground'
                         : 'border border-border hover:border-primary hover:bg-secondary'
                         } ${day.isToday ? 'ring-2 ring-primary/20' : ''}`}
-                      onClick={() => setSelectedDate(day.date)}
+                      onClick={() => {
+                        setSelectedDate(day.date);
+
+                        const fullDay = new Date(day.date).toLocaleDateString('en-US', {
+                          weekday: 'long',
+                        });
+
+                        setSelectedDay(fullDay);
+                      }}
+
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -255,24 +295,32 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
                   animate={{ opacity: 1, y: 0 }}
                 >
                   <Label className="text-base font-medium mb-4 block">Select Time</Label>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                    {timeSlots.map((time) => (
-                      <motion.button
-                        key={time}
-                        className={`p-3 rounded-lg text-center transition-all ${selectedTime === time
-                          ? 'bg-primary text-primary-foreground'
-                          : 'border border-border hover:border-primary hover:bg-secondary'
-                          }`}
-                        onClick={() => setSelectedTime(time)}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        {time}
-                      </motion.button>
-                    ))}
-                  </div>
+
+                  {timeSlots.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center">
+                      No slots available for this day
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                      {timeSlots.map((slot) => (
+                        <motion.button
+                          key={slot._id}
+                          className={`p-3 rounded-lg text-center transition-all ${selectedTime === slot.startTime
+                            ? 'bg-primary text-primary-foreground'
+                            : 'border border-border hover:border-primary hover:bg-secondary'
+                            }`}
+                          onClick={() => setSelectedTime(slot.startTime)}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {slot.startTime} – {slot.endTime}
+                        </motion.button>
+                      ))}
+                    </div>
+                  )}
                 </motion.div>
               )}
+
             </div>
           </motion.div>
         );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Plus, Edit, Trash2, Save, X, Package, DollarSign, Percent, Star } from 'lucide-react';
 import { Button } from './ui/button';
@@ -19,37 +19,12 @@ interface ServicePackage {
   discount: number;
   duration: string;
   popular: boolean;
+  image: string;
   category: string;
 }
 
 export function AdminPackagesPage() {
-  const [packages, setPackages] = useState<ServicePackage[]>([
-    {
-      id: '1',
-      name: 'Bridal Package',
-      description: 'Complete bridal makeover with hair, makeup, and nails',
-      services: ['Bridal Hair Styling', 'Professional Makeup', 'Manicure & Pedicure'],
-      originalPrice: 350,
-      discountedPrice: 280,
-      discount: 20,
-      duration: '4 hours',
-      popular: true,
-      category: 'Special Occasions'
-    },
-    {
-      id: '2',
-      name: 'Relaxation Retreat',
-      description: 'Full day of pampering and relaxation',
-      services: ['Full Body Massage', 'Facial Treatment', 'Hair Treatment'],
-      originalPrice: 300,
-      discountedPrice: 240,
-      discount: 20,
-      duration: '6 hours',
-      popular: false,
-      category: 'Wellness'
-    }
-  ]);
-
+  const [packages, setPackages] = useState<ServicePackage[]>([]);
   const [isAddingPackage, setIsAddingPackage] = useState(false);
   const [editingPackage, setEditingPackage] = useState<string | null>(null);
   const [newPackage, setNewPackage] = useState({
@@ -60,11 +35,75 @@ export function AdminPackagesPage() {
     discountedPrice: 0,
     discount: 0,
     duration: '',
+    image: '',
     popular: false,
     category: 'Special Occasions'
   });
 
-  const categories = ['Special Occasions', 'Wellness', 'Hair Care', 'Skincare', 'Couples'];
+  const fetchPackages = async () => {
+    try {
+      const res = await fetch('api/package', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to fetch packages');
+      }
+
+      const json = await res.json();
+
+      if (!Array.isArray(json.data)) {
+        throw new Error('Packages data is not an array');
+      }
+
+      const reverseCategoryMap: Record<string, string> = {
+        signature: 'Signature Collections',
+        bridal: 'Bridal',
+        seasonal: 'Seasonal offers',
+        gift: 'Gift Packages',
+      };
+
+      const mappedPackages: ServicePackage[] = json.data.map((pkg: any) => {
+        const discount = Math.round(
+          ((pkg.originalPrice - pkg.price) / pkg.originalPrice) * 100
+        );
+
+        return {
+          id: pkg._id,
+          name: pkg.name,
+          description: pkg.description,
+          services: pkg.services || [],
+          originalPrice: pkg.originalPrice,
+          discountedPrice: pkg.price,
+          discount,
+          duration: `${pkg.duration}`,
+          popular: pkg.popular || false,
+          image: pkg.image || '',
+          category: reverseCategoryMap[pkg.category] || pkg.category,
+        };
+      });
+
+      // ✅ IMPORTANT: replace state, don’t append
+      setPackages(mappedPackages);
+
+    } catch (error) {
+      console.error('Error fetching packages:', error);
+    }
+  };
+
+
+  useEffect(() => {
+    fetchPackages();
+  }, []);
+
+
+
+  const categories = ['Signature Collections', 'Bridal', 'Seasonal offers', 'Gift Packages'];
+
+
+
   const availableServices = [
     'Classic Cut & Style',
     'Color Treatment',
@@ -78,25 +117,104 @@ export function AdminPackagesPage() {
     'Anti-Aging Treatment'
   ];
 
-  const handleAddPackage = () => {
-    const discount = Math.round(((newPackage.originalPrice - newPackage.discountedPrice) / newPackage.originalPrice) * 100);
-    const packageData: ServicePackage = {
-      id: Date.now().toString(),
-      ...newPackage,
-      discount,
-      services: newPackage.services.filter(service => service.trim() !== '')
-    };
-    setPackages([...packages, packageData]);
-    resetForm();
-    setIsAddingPackage(false);
+  const categoryMap: Record<string, string> = {
+    "Signature Collections": "signature",
+    "Bridal": "bridal",
+    "Seasonal offers": "seasonal",
+    "Gift Packages": "gift",
   };
 
-  const handleDeletePackage = (id: string) => {
-    setPackages(packages.filter(pkg => pkg.id !== id));
+
+  const handleAddPackage = async () => {
+    try {
+      if (!newPackage.category) {
+        alert("Please select category");
+        return;
+      }
+
+      const discount = Math.round(
+        ((newPackage.originalPrice - newPackage.discountedPrice) /
+          newPackage.originalPrice) *
+        100
+      );
+
+      const mappedCategory = categoryMap[newPackage.category];
+
+      if (!mappedCategory) {
+        alert("Invalid category selected");
+        return;
+      }
+
+      const packageData = {
+        name: newPackage.name,
+        description: newPackage.description,
+        price: newPackage.discountedPrice,
+        originalPrice: newPackage.originalPrice,
+        discount,
+        duration: newPackage.duration,
+        image: newPackage.image,
+        popular: newPackage.popular,
+        category: mappedCategory,   // ✅ lowercase backend value
+        services: newPackage.services.filter(s => s.trim() !== "")
+      };
+
+      console.log("Sending:", packageData);
+
+      const res = await fetch("api/package", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(packageData),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+         alert("✅ Package added successfully");
+      setPackages(prev => [...prev, data]);
+
+      resetForm();
+      setIsAddingPackage(false);
+
+    } catch (error) {
+      console.error("Create package error:", error);
+    }
   };
+
+
+
+  const handleDeletePackage = async (id: string) => {
+      const confirmDelete = window.confirm("Are you sure you want to delete this package?");
+
+  if (!confirmDelete) return;
+    try {
+      const res = await fetch(`api/package/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to delete package");
+      }
+
+      // ✅ Update UI only after backend success
+      setPackages(packages.filter(pkg => pkg.id !== id));
+
+    } catch (error) {
+      console.error("Delete package error:", error);
+      alert("Failed to delete package");
+    }
+  };
+
 
   const handleTogglePopular = (id: string) => {
-    setPackages(packages.map(pkg => 
+    setPackages(packages.map(pkg =>
       pkg.id === id ? { ...pkg, popular: !pkg.popular } : pkg
     ));
   };
@@ -119,21 +237,69 @@ export function AdminPackagesPage() {
     }
   };
 
-  const handleUpdatePackage = () => {
-    const discount = Math.round(((newPackage.originalPrice - newPackage.discountedPrice) / newPackage.originalPrice) * 100);
-    setPackages(packages.map(pkg => 
-      pkg.id === editingPackage 
-        ? { 
-            ...pkg, 
-            ...newPackage, 
+  const handleUpdatePackage = async () => {
+    try {
+      if (!editingPackage) return;
+
+      const discount = Math.round(
+        ((newPackage.originalPrice - newPackage.discountedPrice) /
+          newPackage.originalPrice) *
+        100
+      );
+
+      const mappedCategory = categoryMap[newPackage.category];
+
+      if (!mappedCategory) {
+        alert("Invalid category selected");
+        return;
+      }
+
+      const updatedData = {
+        name: newPackage.name,
+        description: newPackage.description,
+        price: newPackage.discountedPrice,
+        originalPrice: newPackage.originalPrice,
+        discount,
+        duration: newPackage.duration,
+        image: newPackage.image,
+        popular: newPackage.popular,
+        category: mappedCategory,
+        services: newPackage.services.filter(s => s.trim() !== "")
+      };
+
+      const res = await fetch(`api/package/${editingPackage}`, {
+        method: "PUT",   // or PATCH depending on your backend route
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(updatedData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error);
+
+      // 🔥 Update UI after successful backend update
+      setPackages(packages.map(pkg =>
+        pkg.id === editingPackage
+          ? {
+            ...pkg,
+            ...newPackage,
             discount,
-            services: newPackage.services.filter(service => service.trim() !== '')
+            services: newPackage.services.filter(s => s.trim() !== "")
           }
-        : pkg
-    ));
-    setEditingPackage(null);
-    resetForm();
+          : pkg
+      ));
+
+      setEditingPackage(null);
+      resetForm();
+
+    } catch (error) {
+      console.error("Update package error:", error);
+    }
   };
+
 
   const resetForm = () => {
     setNewPackage({
@@ -262,6 +428,26 @@ export function AdminPackagesPage() {
                       placeholder="e.g., 3 hours, Half day"
                     />
                   </div>
+
+
+                  <div>
+
+
+
+                    <Label>Image URL</Label>
+                    <Input
+                      value={newPackage.image}
+                      onChange={(e) =>
+                        setNewPackage({ ...newPackage, image: e.target.value })
+                      }
+                      placeholder="Enter image URL"
+                    />
+                  </div>
+
+
+
+
+
                 </div>
                 <div className="space-y-4">
                   <div>
@@ -294,6 +480,7 @@ export function AdminPackagesPage() {
                         </Button>
                       </div>
                     ))}
+
                     <Button
                       type="button"
                       variant="outline"
@@ -307,7 +494,7 @@ export function AdminPackagesPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="originalPrice">Original Price ($)</Label>
+                      <Label htmlFor="originalPrice">Original Price (₹)</Label>
                       <Input
                         type="number"
                         value={newPackage.originalPrice}
@@ -316,7 +503,7 @@ export function AdminPackagesPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="discountedPrice">Discounted Price ($)</Label>
+                      <Label htmlFor="discountedPrice">Discounted Price (₹)</Label>
                       <Input
                         type="number"
                         value={newPackage.discountedPrice}
@@ -338,15 +525,15 @@ export function AdminPackagesPage() {
                 </div>
               </div>
               <div className="flex space-x-2 mt-6">
-                <Button 
+                <Button
                   onClick={editingPackage ? handleUpdatePackage : handleAddPackage}
                   className="bg-gradient-to-r from-primary to-accent text-primary-foreground"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   {editingPackage ? 'Update' : 'Save'} Package
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => {
                     setIsAddingPackage(false);
                     setEditingPackage(null);
@@ -421,10 +608,10 @@ export function AdminPackagesPage() {
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center space-x-2">
                             <span className="text-lg font-semibold text-primary">
-                              ${pkg.discountedPrice}
+                              ₹{pkg.discountedPrice}
                             </span>
                             <span className="text-sm text-muted-foreground line-through">
-                              ${pkg.originalPrice}
+                              ₹{pkg.originalPrice}
                             </span>
                           </div>
                         </div>

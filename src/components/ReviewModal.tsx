@@ -62,7 +62,7 @@ export function ReviewModal({
       body: JSON.stringify({
         bookingId: booking.id,
         rating,
-        reviewText: review,
+        comment: review,
         recommend,
       }),
     });
