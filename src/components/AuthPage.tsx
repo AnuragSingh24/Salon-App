@@ -247,23 +247,23 @@ export function AuthPage({ setCurrentPage, setIsAuthenticated, setUserRole }: Au
             </form>
 
             <div className="mt-6">
-              <div className="relative">
+              {/* <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <Separator className="w-full" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-white px-2 text-muted-foreground">Or continue with</span>
                 </div>
-              </div>
+              </div> */}
 
               <div className="mt-6 space-y-3">
-                <Button
+                {/* <Button
                   type="button"
                   variant="outline"
                   className="w-full py-3 border-primary/20 hover:border-primary hover:bg-primary/5"
                   // onClick={handleGoogleAuth}
                   onClick={() =>
-                    window.location.href = "http://localhost:5000/api/auth/google"
+                    window.location.href = "/api/auth/google"
                   }
                 >
                   <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
@@ -273,7 +273,7 @@ export function AuthPage({ setCurrentPage, setIsAuthenticated, setUserRole }: Au
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                   </svg>
                   Continue with Google
-                </Button>
+                </Button> */}
 
                 {/* <Button
                   type="button"
