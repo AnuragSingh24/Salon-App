@@ -133,7 +133,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
 
         if (data.success) {
           setServices(data.data);
-          ;
+          
         }
 
       } catch (error) {
@@ -173,7 +173,9 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
       console.error("Status update error:", error);
     }
   };
-
+  useEffect(() => {
+    
+  })
   const handleFilterByDate = async () => {
     if (!filterDate) return;
 
@@ -216,7 +218,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
       if (data.success) {
         // remove from UI instantly
         setTodayAppointments((prev) =>
-          prev.filter((booking) => booking._id !== id)
+          prev.filter((booking) => booking.id !== id)
         );
 
       }
@@ -505,7 +507,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
                                 size="sm"
                                 variant="ghost"
                                 className="h-8 w-8 p-0 text-destructive"
-                                onClick={() => handleDeleteBooking(appointment._id)}
+                                onClick={() => handleDeleteBooking(appointment.id)}
 
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -559,7 +561,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
                               <select
                                 value={service.active ? "true" : "false"}
                                 onChange={(e) =>
-                                  handleStatusChange(service._id, e.target.value === "true")
+                                  handleStatusChange(service.id, e.target.value === "true")
                                 }
                                 className="border rounded px-2 py-1 text-sm"
                                 autoFocus
