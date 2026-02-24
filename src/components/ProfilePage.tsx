@@ -66,7 +66,7 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
           return;
         }
 
-        const res = await fetch(`${apiUrl}}/api/profile`, {
+        const res = await fetch(`${apiUrl}/api/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
