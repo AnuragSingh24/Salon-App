@@ -7,7 +7,7 @@ import { Badge } from './ui/badge';
 import { Textarea } from './ui/textarea';
 import { Avatar } from './ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-
+const apiUrl = import.meta.env.VITE_API_URL;
 interface Review {
   id: string;
   customerName: string;
@@ -121,7 +121,7 @@ export function AdminReviewsPage() {
           params.append("rating", filterRating);
         }
 
-        const res = await fetch(`/api/reviews/admin?${params.toString()}`, {
+        const res = await fetch(`${apiUrl}/api/reviews/admin?${params.toString()}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -144,7 +144,7 @@ export function AdminReviewsPage() {
       try {
         const token = localStorage.getItem('token');
 
-        const res = await fetch('/api/reviews/dashboard', {
+        const res = await fetch(`${apiUrl}/api/reviews/dashboard`, {
           headers: {
             Authorization: `Bearer ${token}`
           }

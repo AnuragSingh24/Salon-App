@@ -7,7 +7,7 @@ import { Card } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
-
+const apiUrl = import.meta.env.VITE_API_URL;
 interface BookingPageProps {
   setCurrentPage: (page: string) => void;
 }
@@ -52,7 +52,7 @@ async function fetchStylists(): Promise<Stylist[]> {
   const token = getToken();
   if (!token) throw new Error('Not authenticated. Please login.');
 
-  const res = await fetch('/api/stylist', {
+  const res = await fetch(`${apiUrl}/api/stylist`, {
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
@@ -123,7 +123,7 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const res = await fetch(`/api/timeSlot/getTime?day=${day}`, {
+      const res = await fetch(`${apiUrl}/api/timeSlot/getTime?day=${day}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -172,7 +172,7 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
       const token = getToken();
 
       // 1️⃣ CHECK AVAILABILITY
-      const checkRes = await fetch('/api/bookings/check', {
+      const checkRes = await fetch(`${apiUrl}/api/bookings/check`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -194,7 +194,7 @@ export function BookingPage({ setCurrentPage }: BookingPageProps) {
 
       // 2️⃣ CREATE BOOKING AFTER CHECK SUCCESS
       setCreatingBooking(true);
-      const bookingRes = await fetch('/api/bookings/create', {
+      const bookingRes = await fetch(`${apiUrl}/api/bookings/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

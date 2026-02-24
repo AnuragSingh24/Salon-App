@@ -52,16 +52,16 @@ export default defineConfig({
   server: {
     port: 3002, // your Vite port (default)
     // If your backend is on localhost:5000
-    proxy: {
-      "/api": {
-        target: 'https://salon-app-backend-jxd0.onrender.com',
-        // target: "http://localhost:5000",
-        changeOrigin: true, // changes the origin of the host header to the target URL
-        secure: false, // if your backend uses self-signed https, set false
-        ws: true, // enable websocket proxying (if needed)
-        // Optional: rewrite if backend doesn't have /api prefix
-        // rewrite: (path) => path.replace(/^\/api/, ''),
-      },
-    },
+    // proxy: {
+    //   "/api": {
+    //     target: 'https://salon-app-backend-jxd0.onrender.com',
+    //     // target: "http://localhost:5000",
+    //     changeOrigin: true, // changes the origin of the host header to the target URL
+    //     secure: false, // if your backend uses self-signed https, set false
+    //     ws: true, // enable websocket proxying (if needed)
+    //     // Optional: rewrite if backend doesn't have /api prefix
+    //     // rewrite: (path) => path.replace(/^\/api/, ''),
+    //   },
+    // },
   },
 });

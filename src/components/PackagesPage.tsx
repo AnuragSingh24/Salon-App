@@ -16,7 +16,7 @@ import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-
+const apiUrl = import.meta.env.VITE_API_URL;
 interface PackagesPageProps {
   setCurrentPage: (page: string) => void;
 }
@@ -57,7 +57,7 @@ export function PackagesPage({ setCurrentPage }: PackagesPageProps) {
       try {
         setLoading(true);
         const res = await fetch(
-          `/api/package/cat?category=${selectedCategory}`
+          `${apiUrl}/api/package/cat?category=${selectedCategory}`
         );
         const data = await res.json();
         setPackages(data.packages || []);

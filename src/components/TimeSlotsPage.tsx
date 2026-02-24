@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+const apiUrl =  import.meta.env.VITE_API_URL;
 import {
   Select,
   SelectContent,
@@ -51,7 +52,7 @@ export function TimeSlotsPage() {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const res = await fetch('/api/timeSlot/admin', {
+      const res = await fetch(`${apiUrl}/api/timeSlot/admin`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -82,7 +83,7 @@ export function TimeSlotsPage() {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const res = await fetch(`/api/timeSlot/admin/${id}/toggle`, {
+      const res = await fetch(`${apiUrl}/api/timeSlot/admin/${id}/toggle`, {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`
@@ -113,7 +114,7 @@ export function TimeSlotsPage() {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const res = await fetch('/api/timeSlot/admin', {
+      const res = await fetch(`${apiUrl}/api/timeSlot/admin`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -151,7 +152,7 @@ export function TimeSlotsPage() {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const res = await fetch(`/api/timeSlot/admin/${id}`, {
+      const res = await fetch(`${apiUrl}/api/timeSlot/admin/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`

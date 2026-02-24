@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Star } from 'lucide-react';
-
+const apiUrl = import.meta.env.VITE_API_URL;
 interface ReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -53,7 +53,7 @@ export function ReviewModal({
       return;
     }
 
-    const response = await fetch("/api/reviews", {
+    const response = await fetch(`${apiUrl}/api/reviews`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

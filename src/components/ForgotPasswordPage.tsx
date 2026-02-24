@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion } from "motion/react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
-
+const apiUrl = import.meta.env.VITE_API_URL;
 interface Props {
   setCurrentPage: (page: string) => void;
 }
@@ -16,7 +16,7 @@ export function ForgotPasswordPage({ setCurrentPage }: Props) {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleSendOtp = async () => {
-    await fetch("/api/auth/send-otp", {
+    await fetch(`${apiUrl}/api/auth/send-otp`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email })
@@ -26,7 +26,7 @@ export function ForgotPasswordPage({ setCurrentPage }: Props) {
   };
 
   const handleVerifyOtp = async () => {
-    const res = await fetch("/api/auth/verify-otp", {
+    const res = await fetch(`${apiUrl}/api/auth/verify-otp`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, otp })
@@ -47,7 +47,7 @@ export function ForgotPasswordPage({ setCurrentPage }: Props) {
       return;
     }
 
-    const res = await fetch("/api/auth/reset-password", {
+    const res = await fetch(`${apiUrl}/api/auth/reset-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password })

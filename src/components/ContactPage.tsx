@@ -8,7 +8,7 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-
+const apiUrl = import.meta.env.VITE_API_URL;
 interface ContactPageProps {
   setCurrentPage: (page: string) => void;
 }
@@ -78,7 +78,7 @@ export function ContactPage({ setCurrentPage }: ContactPageProps) {
     setError('');
 
     try {
-      const response = await fetch('/api/mail/send-mail', {
+      const response = await fetch(`${apiUrl}/api/mail/send-mail`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)

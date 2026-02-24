@@ -6,6 +6,7 @@ import { Card } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Separator } from './ui/separator';
+const apiUrl = import.meta.env.VITE_API_URL;
 
 interface AuthPageProps {
   setCurrentPage: (page: string) => void;
@@ -29,8 +30,8 @@ export function AuthPage({ setCurrentPage, setIsAuthenticated, setUserRole }: Au
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
-
+    const endpoint = isLogin ? `${apiUrl}/api/auth/login` : `${apiUrl}/api/auth/signup`;
+     console.log(endpoint);
     const payload = isLogin
       ? { email: formData.email, password: formData.password }
       : {

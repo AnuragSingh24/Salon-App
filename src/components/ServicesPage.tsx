@@ -5,7 +5,7 @@ import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-
+const apiUrl = import.meta.env.VITE_API_URL;
 // interface ServicesPageProps {
 //   setCurrentPage: (page: string) => void;
 // }
@@ -179,7 +179,7 @@ export function ServicesPage({ setCurrentPage }: ServicesPageProps) {
             ? ""
             : `?category=${selectedCategory.toLowerCase()}`;
 
-        const res = await fetch(`/api/services${param}`, {
+        const res = await fetch(`${apiUrl}/api/services${param}`, {
           signal: controller.signal,
           headers: {
             "Content-Type": "application/json",

@@ -8,7 +8,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
-
+const apiUrl = import.meta.env.VITE_API_URL;
 interface ProfilePageProps {
   setCurrentPage: (page: string) => void;
 }
@@ -66,7 +66,7 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
           return;
         }
 
-        const res = await fetch('/api/profile', {
+        const res = await fetch(`${apiUrl}}/api/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -109,7 +109,7 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
         address: userInfo.address,
       };
 
-      const res = await fetch('/api/profile', {
+      const res = await fetch(`${apiUrl}/api/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -152,7 +152,7 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
 
     (async () => {
       try {
-        const res = await fetch('/api/profile/upcoming', {
+        const res = await fetch(`${apiUrl}/api/profile/upcoming`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -219,7 +219,7 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
     }
 
     try {
-      const res = await fetch(`/api/profile/cancel/${bookingId}`, {
+      const res = await fetch(`${apiUrl}/api/profile/cancel/${bookingId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -258,7 +258,7 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
 
     (async () => {
       try {
-        const res = await fetch('/api/profile/history', {
+        const res = await fetch(`${apiUrl}/api/profile/history`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -296,7 +296,7 @@ export function ProfilePage({ setCurrentPage }: ProfilePageProps) {
     try {
       setSubmittingReview(bookingId);
 
-      const res = await fetch('/api/reviews', {
+      const res = await fetch(`${apiUrl}/api/reviews`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

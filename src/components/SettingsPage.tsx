@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Separator } from './ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { usePreferences } from '../context/PreferencesContext';
-
+const apiUrl = import.meta.env.VITE_API_URL;
 interface SettingsPageProps {
   setCurrentPage: (page: string) => void;
   setIsAuthenticated: (auth: boolean) => void;
@@ -73,7 +73,7 @@ export function SettingsPage({ setCurrentPage, setIsAuthenticated, setUserRole, 
 
       const token = localStorage.getItem("token");
 
-      const response = await fetch("api/auth/change-password", {
+      const response = await fetch(`${apiUrl}/api/auth/change-password`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

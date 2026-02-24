@@ -10,7 +10,7 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 
 import { ReviewModal } from './ReviewModal';
 import { BookingsList } from './BookingList';
-
+const apiUrl = import.meta.env.VITE_API_URL;
 export interface Booking {
   id: string;
   serviceName: string;
@@ -66,7 +66,7 @@ const [reviewsLoading, setReviewsLoading] = useState(true);
         const token = localStorage.getItem("token");
 
         const res = await fetch(
-          "api/bookings/pending-reviews",
+          `${apiUrl}/api/bookings/pending-reviews`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -122,7 +122,7 @@ const [reviewsLoading, setReviewsLoading] = useState(true);
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch("/api/reviews/stats");
+        const res = await fetch(`${apiUrl}/api/reviews/stats`);
         if (!res.ok) throw new Error("Failed to fetch stats");
 
         const data = await res.json();
@@ -160,7 +160,7 @@ const [reviewsLoading, setReviewsLoading] = useState(true);
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const res = await fetch("/api/reviews/all");
+        const res = await fetch(`${apiUrl}/api/reviews/all`);
 
         if (!res.ok) throw new Error("Failed to fetch reviews");
 
