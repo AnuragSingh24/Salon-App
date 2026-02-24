@@ -6,7 +6,7 @@ import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-
+const apiUrl = import.meta.env.VITE_API_URL;
 
 interface AdminDashboardProps {
   setCurrentPage: (page: string) => void;
@@ -27,7 +27,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const res = await fetch("/api/admin/dashboard-stats/", {
+        const res = await fetch(`${apiUrl}/api/admin/dashboard-stats/`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`
           }
@@ -99,7 +99,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const res = await fetch("/api/admin/today-appointments", {
+        const res = await fetch(`${apiUrl}/api/admin/today-appointments`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`
           }
@@ -123,7 +123,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const res = await fetch("/api/admin/services", {
+        const res = await fetch(`${apiUrl}/api/admin/services`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`
           }
@@ -146,7 +146,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
 
   const handleStatusChange = async (id: string, newStatus: boolean) => {
     try {
-      const res = await fetch(`/api/admin/services/${id}/status`, {
+      const res = await fetch(`${apiUrl}/api/admin/services/${id}/status`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -181,7 +181,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
 
     try {
       const res = await fetch(
-        `/api/admin/appointments-by-date?date=${filterDate}`,
+        `${apiUrl}/api/admin/appointments-by-date?date=${filterDate}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`
@@ -206,7 +206,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
     }
 
     try {
-      const res = await fetch(`/api/bookings/${id}`, {
+      const res = await fetch(`${apiUrl}/api/bookings/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`
@@ -234,7 +234,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
     newStatus: string
   ) => {
     try {
-      const res = await fetch(`/api/bookings/${id}`, {
+      const res = await fetch(`${apiUrl}/api/bookings/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

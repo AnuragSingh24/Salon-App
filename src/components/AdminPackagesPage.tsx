@@ -8,7 +8,7 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Badge } from './ui/badge';
-
+const apiUrl = import.meta.env.VITE_API_URL;
 interface ServicePackage {
   id: string;
   name: string;
@@ -42,7 +42,7 @@ export function AdminPackagesPage() {
 
   const fetchPackages = async () => {
     try {
-      const res = await fetch('api/package', {
+      const res = await fetch(`${apiUrl}/api/package`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -160,7 +160,7 @@ export function AdminPackagesPage() {
 
       console.log("Sending:", packageData);
 
-      const res = await fetch("api/package", {
+      const res = await fetch(`${apiUrl}api/package`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -190,7 +190,7 @@ export function AdminPackagesPage() {
 
   if (!confirmDelete) return;
     try {
-      const res = await fetch(`api/package/${id}`, {
+      const res = await fetch(`${apiUrl}/api/package/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -267,7 +267,7 @@ export function AdminPackagesPage() {
         services: newPackage.services.filter(s => s.trim() !== "")
       };
 
-      const res = await fetch(`api/package/${editingPackage}`, {
+      const res = await fetch(`${apiUrl}/api/package/${editingPackage}`, {
         method: "PUT",   // or PATCH depending on your backend route
         headers: {
           "Content-Type": "application/json",
