@@ -128,13 +128,23 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
                   <Button
                     size="lg"
                     onClick={() => {
+                      const isLoggedIn =
+                        JSON.parse(sessionStorage.getItem('isLoggedIn') || 'false') === true;
+
+                      if (!isLoggedIn) {
+                        // Redirect unauthenticated users to login page
+                        setCurrentPage('auth'); // or 'login' if that’s your route name
+                        return;
+                      }
+
+                      // Proceed to booking for authenticated users
                       sessionStorage.setItem(
                         'selectedBooking',
                         JSON.stringify({
                           bookingType: 'appointment', // 👈 NEW TYPE
                           name: 'General Appointment',
                           duration: null,
-                          price: 0
+                          price: 0,
                         })
                       );
                       setCurrentPage('booking');
@@ -144,7 +154,6 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
                     Book Appointment
                     <Calendar className="ml-2 h-5 w-5 group-hover:scale-110 transition-transform" />
                   </Button>
-
                 )}
 
                 <Button
@@ -152,8 +161,8 @@ export function HomePage({ setCurrentPage, userRole }: HomePageProps) {
                   variant={userRole === 'admin' ? 'default' : 'outline'}
                   onClick={() => setCurrentPage('services')}
                   className={`px-8 py-6 text-lg group ${userRole === 'admin'
-                      ? 'bg-gradient-to-r from-primary to-accent text-primary-foreground border-0'
-                      : 'border-primary/20 hover:border-primary'
+                    ? 'bg-gradient-to-r from-primary to-accent text-primary-foreground border-0'
+                    : 'border-primary/20 hover:border-primary'
                     }`}
                 >
                   View Services

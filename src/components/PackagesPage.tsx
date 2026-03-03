@@ -35,6 +35,7 @@ export function PackagesPage({ setCurrentPage }: PackagesPageProps) {
   const [packages, setPackages] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
+
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -218,8 +219,13 @@ export function PackagesPage({ setCurrentPage }: PackagesPageProps) {
                         ))}
                       </div>
 
+
+
                       <Button
                         onClick={() => {
+
+
+                          // Stage the booking regardless — helps resume after login
                           sessionStorage.setItem(
                             'selectedBooking',
                             JSON.stringify({
@@ -227,16 +233,26 @@ export function PackagesPage({ setCurrentPage }: PackagesPageProps) {
                               packageId: pkg._id,
                               name: pkg.name,
                               price: pkg.price,
-                              duration: pkg.duration
+                              duration: pkg.duration,
                             })
                           );
 
-                          setCurrentPage('booking');
+
+                          const isLoggedIn = JSON.parse(
+                            sessionStorage.getItem('isLoggedIn') ?? 'false'
+                          );
+
+                          if (isLoggedIn) {
+                            setCurrentPage('booking');
+                          } else {
+                            setCurrentPage('auth');
+                          }
                         }}
                         className="w-full mt-2"
                       >
                         Book Package
                       </Button>
+
 
                     </div>
                   </Card>

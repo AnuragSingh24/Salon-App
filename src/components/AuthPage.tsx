@@ -6,6 +6,7 @@ import { Card } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Separator } from './ui/separator';
+import { SignupSuccess } from './SignupSuccess';
 const apiUrl = import.meta.env.VITE_API_URL;
 
 interface AuthPageProps {
@@ -17,6 +18,7 @@ interface AuthPageProps {
 export function AuthPage({ setCurrentPage, setIsAuthenticated, setUserRole }: AuthPageProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+ const [signupComplete, setSignupComplete] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -54,6 +56,7 @@ export function AuthPage({ setCurrentPage, setIsAuthenticated, setUserRole }: Au
       console.log("Login response:", data);
       if (!response.ok) throw new Error(data.message || 'Authentication failed');
 
+      if(isLogin){
       // ✅ Save JWT token in localStorage for future requests
       localStorage.setItem('token', data.token);
       localStorage.setItem('role', data.role);
@@ -69,13 +72,29 @@ export function AuthPage({ setCurrentPage, setIsAuthenticated, setUserRole }: Au
 
       // Navigate
       setCurrentPage(data.role === 'admin' ? 'admin' : 'profile');
-
+      }else{
+          setSignupComplete(true);
+      }
     } catch (error: any) {
       console.error('Auth error:', error);
       alert(error.message);
     }
   };
 
+
+  
+  if (signupComplete) {
+    return (
+      <SignupSuccess
+        onGoToLogin={() => {
+          setIsLogin(true);
+          setSignupComplete(false);
+          // Optionally, prefill email so user just enters password
+          // setFormData(f => ({ ...f, password: '', confirmPassword: '' }));
+        }}
+      />
+    );
+  }
 
 
   const handleGoogleAuth = () => {
