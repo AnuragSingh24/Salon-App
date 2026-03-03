@@ -8,7 +8,7 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-
+const apiUrl = import.meta.env.VITE_API_URL;
 interface Service {
   _id: string;
   name: string;
@@ -40,13 +40,11 @@ export function AdminServicesPage() {
 
   /* ================= FETCH SERVICES ================= */
 
-  useEffect(() => {
-    fetchServices();
-  }, []);
+
 
   const fetchServices = async () => {
     try {
-      const res = await fetch('/api/services');
+      const res = await fetch(`${apiUrl}/api/services`);
       const data = await res.json();
 
       // Handle both array or { success, data }
@@ -65,6 +63,9 @@ export function AdminServicesPage() {
       console.error('Error fetching services:', error);
     }
   };
+    useEffect(() => {
+    fetchServices();
+  }, []);
 
   /* ================= CREATE SERVICE ================= */
 

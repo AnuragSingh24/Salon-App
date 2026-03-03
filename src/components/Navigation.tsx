@@ -14,38 +14,48 @@ export function Navigation({ currentPage, setCurrentPage, isAuthenticated, userR
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Different navigation items based on user role
-  const navItems = userRole === 'admin' && isAuthenticated 
+  const navItems = userRole === 'admin' && isAuthenticated
     ? [
-        { id: 'admin', label: 'Dashboard', icon: BarChart3 },
-        { id: 'timeslots', label: 'Time Slots', icon: Clock },
-        { id: 'admin-services', label: 'Manage Services', icon: Plus },
-        { id: 'admin-packages', label: 'Manage Packages', icon: Package },
-        { id: 'admin-reviews', label: 'Manage Reviews', icon: MessageSquare },
-      ]
+      { id: 'admin', label: 'Dashboard', icon: BarChart3 },
+      { id: 'timeslots', label: 'Time Slots', icon: Clock },
+      { id: 'admin-services', label: 'Manage Services', icon: Plus },
+      { id: 'admin-packages', label: 'Manage Packages', icon: Package },
+      { id: 'admin-reviews', label: 'Manage Reviews', icon: MessageSquare },
+    ]
     : [
-        { id: 'home', label: 'Home', icon: Home },
-        { id: 'services', label: 'Services', icon: Scissors },
-        { id: 'packages', label: 'Packages', icon: Gift },
-        { id: 'gallery', label: 'Gallery', icon: Camera },
-        { id: 'reviews', label: 'Reviews', icon: Star },
-        { id: 'contact', label: 'Contact', icon: Phone },
-      ];
+      { id: 'home', label: 'Home', icon: Home },
+      { id: 'services', label: 'Services', icon: Scissors },
+      { id: 'packages', label: 'Packages', icon: Gift },
+      { id: 'gallery', label: 'Gallery', icon: Camera },
+      { id: 'reviews', label: 'Reviews', icon: Star },
+      { id: 'contact', label: 'Contact', icon: Phone },
+    ];
 
-  const authItems = isAuthenticated 
+  const authItems = isAuthenticated
     ? [
-        { id: 'profile', label: 'Profile', icon: User },
-        { id: 'settings', label: 'Settings', icon: Settings },
-      ]
+      { id: 'profile', label: 'Profile', icon: User },
+      { id: 'settings', label: 'Settings', icon: Settings },
+    ]
     : [{ id: 'auth', label: 'Sign In', icon: User }];
 
   const handleNavClick = (pageId: string) => {
-    setCurrentPage(pageId);
+
+    const isLoggedIn = JSON.parse(
+      sessionStorage.getItem('isLoggedIn') ?? 'false'
+    );
+
+    if (isLoggedIn) {
+      setCurrentPage(pageId);
+    } else {
+      setCurrentPage('auth');
+    }
+
     setIsMobileMenuOpen(false);
   };
 
   return (
     <>
-      <motion.nav 
+      <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-border"
@@ -53,7 +63,7 @@ export function Navigation({ currentPage, setCurrentPage, isAuthenticated, userR
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <motion.div 
+            <motion.div
               className="flex items-center space-x-3 cursor-pointer"
               onClick={() => handleNavClick('home')}
               whileHover={{ scale: 1.02 }}
@@ -73,11 +83,10 @@ export function Navigation({ currentPage, setCurrentPage, isAuthenticated, userR
                   <motion.button
                     key={item.id}
                     onClick={() => handleNavClick(item.id)}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                      currentPage === item.id 
-                        ? 'text-primary bg-secondary' 
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${currentPage === item.id
+                        ? 'text-primary bg-secondary'
                         : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
-                    }`}
+                      }`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -106,7 +115,7 @@ export function Navigation({ currentPage, setCurrentPage, isAuthenticated, userR
               })}
               {/* Only show booking button for customers or non-authenticated users */}
               {userRole !== 'admin' && (
-                <Button 
+                <Button
                   onClick={() => handleNavClick('booking')}
                   className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0"
                 >
@@ -131,7 +140,7 @@ export function Navigation({ currentPage, setCurrentPage, isAuthenticated, userR
       {/* Mobile Menu */}
       <motion.div
         initial={false}
-        animate={{ 
+        animate={{
           opacity: isMobileMenuOpen ? 1 : 0,
           y: isMobileMenuOpen ? 0 : -20,
           pointerEvents: isMobileMenuOpen ? 'auto' : 'none'
@@ -145,11 +154,10 @@ export function Navigation({ currentPage, setCurrentPage, isAuthenticated, userR
               <motion.button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                  currentPage === item.id 
-                    ? 'text-primary bg-secondary' 
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${currentPage === item.id
+                    ? 'text-primary bg-secondary'
                     : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
-                }`}
+                  }`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -160,7 +168,7 @@ export function Navigation({ currentPage, setCurrentPage, isAuthenticated, userR
           })}
           {/* Only show booking button for customers or non-authenticated users */}
           {userRole !== 'admin' && (
-            <Button 
+            <Button
               onClick={() => handleNavClick('booking')}
               className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground border-0"
             >

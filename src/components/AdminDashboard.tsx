@@ -133,7 +133,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
 
         if (data.success) {
           setServices(data.data);
-          
+
         }
 
       } catch (error) {
@@ -174,7 +174,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
     }
   };
   useEffect(() => {
-    
+
   })
   const handleFilterByDate = async () => {
     if (!filterDate) return;
@@ -275,42 +275,44 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'confirmed': return 'bg-green-100 text-green-800 border-green-200';
-      case 'in-progress': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'completed': return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+
+      case 'confirmed': return 'bg-green-100 text-green-800 border border-green-200';
+      case 'in-progress': return 'bg-blue-100 text-blue-800 border border-blue-200';
+      case 'completed': return 'bg-gray-100 text-gray-800 border border-gray-200';
+      case 'cancelled': return 'bg-red-100 text-red-800 border border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border border-gray-200'
+
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-secondary/30 to-accent/20">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-6 md:py-8">
         {/* Header */}
         <motion.div
-          className="mb-8"
+          className="mb-6 md:mb-8"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
               <h1 className="text-3xl font-light text-foreground mb-2">Admin Dashboard</h1>
-              <p className="text-muted-foreground">
+              <p className="text-sm md:text-base text-muted-foreground">
                 Welcome back! Here's what's happening at MK Salon today.
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full md:w-auto">
               <Button
                 variant="outline"
-                className="border-primary/20 hover:border-primary"
+                className="border-primary/20 hover:border-primary w-auto sm:w-auto"
               >
                 <Settings className="w-4 h-4 mr-2" />
                 Settings
               </Button>
               <Button
                 onClick={() => setCurrentPage('booking')}
-                className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0"
+                className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 w-auto sm:w-auto"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 New Appointment
@@ -360,22 +362,28 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-            <TabsList className="grid w-full lg:w-auto lg:inline-grid grid-cols-3 lg:grid-cols-3 bg-white/80 backdrop-blur-sm">
-              <TabsTrigger value="overview">Today's Schedule</TabsTrigger>
-              <TabsTrigger value="appointments">All Appointments</TabsTrigger>
-              <TabsTrigger value="services">Manage Services</TabsTrigger>
+          <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4 md:space-y-6">
+
+            <TabsList className="w-full overflow-x-auto whitespace-nowrap bg-white/80 backdrop-blur-sm rounded-md p-1"> {/* CHANGED (scrollable) */}
+              <div className="inline-flex min-w-full md:min-w-0"> {/* ADDED */}
+                <TabsTrigger value="overview" className="px-3 md:px-4">Today's Schedule</TabsTrigger> {/* ADDED (consistent spacing) */}
+                <TabsTrigger value="appointments" className="px-3 md:px-4">All Appointments</TabsTrigger> {/* ADDED */}
+                <TabsTrigger value="services" className="px-3 md:px-4">Manage Services</TabsTrigger> {/* ADDED */}
+              </div>
             </TabsList>
 
+
             {/* Today's Schedule */}
-            <TabsContent value="overview" className="space-y-6">
-              <Card className="p-6 bg-white/90 backdrop-blur-sm border-0 shadow-lg">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-foreground">Today's Appointments</h3>
-                  <Badge className="bg-primary/10 text-primary border-primary/20">
+            <TabsContent value="overview" className="space-y-4 md:space-y-6">
+              <Card className="p-4 md:p-6 bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 md:mb-6"> {/* CHANGED */}
+                  <h3 className="text-base md:text-lg font-semibold text-foreground">Today's Appointments</h3> {/* CHANGED */}
+                  <Badge className="w-max bg-primary/10 text-primary border-primary/20"> {/* CHANGED */}
                     {todayAppointments.length} appointments
                   </Badge>
                 </div>
+
 
                 <div className="space-y-4">
                   {todayAppointments.map((appointment, index) => (
@@ -384,25 +392,26 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
                       className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-secondary/30 transition-colors"
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
+                      transition={{ delay: index * 0.05 }}
                     >
-                      <div className="flex items-center space-x-4">
-                        <div className="text-center">
-                          <div className="text-sm font-medium text-foreground">{appointment.time}</div>
-                          <div className="text-xs text-muted-foreground">{appointment.duration}min</div>
-                        </div>
-                        <div className="w-px h-12 bg-border" />
-                        <div>
-                          <h4 className="font-medium text-foreground">{appointment.client}</h4>
-                          <p className="text-sm text-muted-foreground">{appointment.service}</p>
-                          <p className="text-xs text-muted-foreground">
-                            with {appointment.stylist}
-                          </p>
 
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"> {/* CHANGED (stack) */}
+                        <div className="flex items-start sm:items-center gap-3"> {/* CHANGED */}
+                          <div className="text-center sm:text-left"> {/* CHANGED */}
+                            <div className="text-sm md:text-base font-medium text-foreground">{appointment.time}</div> {/* CHANGED */}
+                            <div className="text-xs text-muted-foreground">{appointment.duration}min</div> {/* CHANGED */}
+                          </div>
+                          <div className="hidden sm:block w-px h-10 bg-border" /> {/* ADDED */}
+                          <div>
+                            <h4 className="text-sm md:text-base font-medium text-foreground">{appointment.client}</h4> {/* CHANGED */}
+                            <p className="text-xs md:text-sm text-muted-foreground">{appointment.service}</p> {/* CHANGED */}
+                            <p className="text-xs text-muted-foreground">with {appointment.stylist}</p>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center space-x-3">
+
+                      <div className="flex items-center gap-2 sm:gap-3">
                         <div
                           ref={editingAppointmentId === appointment._id ? appointmentEditRef : null}
                         >
@@ -412,7 +421,7 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
                               onChange={(e) =>
                                 handleAppointmentStatusChange(appointment._id, e.target.value)
                               }
-                              className="border rounded px-2 py-1 text-sm"
+                              className="border rounded px-2 py-1 text-xs md:text-sm w-[140px]"
                               autoFocus
                             >
                               <option value="pending">Pending</option>
@@ -446,16 +455,16 @@ export function AdminDashboard({ setCurrentPage }: AdminDashboardProps) {
             </TabsContent>
 
             {/* All Appointments */}
-            <TabsContent value="appointments" className="space-y-6">
-              <Card className="p-6 bg-white/90 backdrop-blur-sm border-0 shadow-lg">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-foreground">Appointment Management</h3>
+            <TabsContent value="appointments" className="space-y-4 md:space-y-6">
+              <Card className="p-4 md:p-6 bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+                <div className="flex items-center justify-between mb-4 md:mb-6 gap-3">
+                  <h3 className="text-base md:text-lg font-semibold text-foreground">Appointment Management</h3>
                   <div className="flex gap-2 items-center">
                     <input
                       type="date"
                       value={filterDate}
                       onChange={(e) => setFilterDate(e.target.value)}
-                      className="border rounded px-2 py-1 text-sm"
+                      className="border rounded px-2 py-1 text-xs md:text-sm"
                     />
 
                     <Button
